@@ -121,9 +121,15 @@ export function handlePtyWebSocket(ws: WebSocket, req: IncomingMessage) {
       }
     }, KEEPALIVE_MS)
 
+    // Ping the client every 20s to keep Render's proxy from dropping the WS connection
+    const wsPing = setInterval(() => {
+      if (ws.readyState === ws.OPEN) ws.ping()
+    }, 20_000)
+
     ws.on("close", () => {
       if (idleTimer) clearTimeout(idleTimer)
       clearInterval(keepAlive)
+      clearInterval(wsPing)
     })
   }
 }
