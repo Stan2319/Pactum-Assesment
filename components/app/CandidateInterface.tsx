@@ -136,9 +136,8 @@ export function CandidateInterface({
     setInput("")
     setSending(true)
 
-    await saveMessage(currentRound, "user", userMessage.content)
-
     try {
+      await saveMessage(currentRound, "user", userMessage.content)
       const roundContext = {
         roundNumber: currentRound,
         totalRounds,
