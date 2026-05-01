@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { DashboardShell } from "@/components/app/DashboardShell"
 import { AssessmentCreator } from "@/components/app/AssessmentCreator"
@@ -8,11 +8,26 @@ export default async function NewAssessmentPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: company } = await supabase
+  let { data: company } = await supabase
     .from("companies")
     .select("name")
     .eq("id", user.id)
     .single()
+
+  // Create company row if missing (e.g. signup race condition or direct nav)
+  if (!company && user.email) {
+    const serviceSupabase = await createServiceClient()
+    const name = user.user_metadata?.company_name ?? user.email.split("@")[0]
+    await serviceSupabase
+      .from("companies")
+      .upsert({ id: user.id, name, email: user.email }, { onConflict: "id" })
+    const { data: refetched } = await serviceSupabase
+      .from("companies")
+      .select("name")
+      .eq("id", user.id)
+      .single()
+    company = refetched
+  }
 
   return (
     <DashboardShell companyName={company?.name ?? "Your Company"} userEmail={user.email ?? ""}>
