@@ -89,36 +89,29 @@ export const FinalCTA: React.FC = () => {
           pricing will increase at launch.
         </motion.p>
 
-        {/* Tally embed — dark background */}
         <motion.div variants={fadeInUp}>
-          <iframe
-            data-tally-src="https://tally.so/embed/ODBEQg?alignLeft=0&hideTitle=1&transparentBackground=1&dynamicHeight=1"
-            loading="lazy"
-            width="100%"
-            height="160"
-            frameBorder={0}
-            marginHeight={0}
-            marginWidth={0}
-            title="Join the Pactum waitlist"
+          <motion.a
+            href="https://tally.so/r/ODBEQg"
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
             style={{
-              maxWidth: 480,
-              display: "block",
-              margin: "0 auto",
-              filter: "invert(1) hue-rotate(180deg)",
+              display: "inline-block",
+              padding: "14px 36px",
+              background: "#fff",
+              color: "#000",
+              fontWeight: 700,
+              fontSize: "0.9375rem",
+              borderRadius: 9999,
+              letterSpacing: "-0.01em",
+              textDecoration: "none",
             }}
-          />
+          >
+            Get early access
+          </motion.a>
         </motion.div>
-
-        <motion.p
-          variants={fadeInUp}
-          style={{
-            marginTop: 24,
-            fontSize: "0.8125rem",
-            color: "rgba(255,255,255,0.25)",
-          }}
-        >
-          No spam. Unsubscribe anytime.
-        </motion.p>
       </motion.div>
     </section>
   )

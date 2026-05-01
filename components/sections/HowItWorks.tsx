@@ -113,7 +113,7 @@ export const HowItWorks: React.FC = () => {
                 cursor: "default",
               }}
             >
-              {/* Step number — large background */}
+              {/* Step number, large background */}
               <span
                 style={{
                   position: "absolute",
