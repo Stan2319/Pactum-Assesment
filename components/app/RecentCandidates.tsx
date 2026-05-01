@@ -226,7 +226,7 @@ export function RecentCandidates({ sessions, assessments }: RecentCandidatesProp
                   {score != null ? (
                     <ScoreChip score={score} />
                   ) : (
-                    <span className="text-sm" style={{ color: "var(--color-silver)" }}>—</span>
+                    <span className="text-sm" style={{ color: "var(--color-silver)" }}>-</span>
                   )}
                 </div>
 

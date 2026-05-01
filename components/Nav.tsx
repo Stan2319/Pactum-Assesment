@@ -60,7 +60,7 @@ export const Nav: React.FC = () => {
           Pactum
         </a>
 
-        {/* Nav links — desktop only */}
+        {/* Nav links, desktop only */}
         <nav
           style={{
             display: "flex",

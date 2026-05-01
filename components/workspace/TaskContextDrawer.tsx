@@ -67,7 +67,7 @@ export function TaskContextDrawer({
           {hasNewRound && (
             <span
               className="text-xs font-semibold px-1.5 py-0.5 rounded-full animate-pulse"
-              style={{ background: "#eff6ff", color: "var(--color-cobalt)", fontSize: 10 }}
+              style={{ background: "color-mix(in srgb, var(--color-cobalt) 15%, var(--color-canvas))", color: "var(--color-cobalt)", fontSize: 10 }}
             >
               New
             </span>
@@ -98,7 +98,7 @@ export function TaskContextDrawer({
             transition={{ duration: 0.22, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
-            <div className="px-4 pb-4 space-y-3 max-h-64 overflow-y-auto">
+            <div className="px-4 pb-4 space-y-3 max-h-96 overflow-y-auto">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--color-slate)" }}>
                   Background
@@ -107,7 +107,7 @@ export function TaskContextDrawer({
                   {assessment.description}
                 </p>
               </div>
-              <div className="rounded-xl p-3" style={{ background: "#eff6ff" }}>
+              <div className="rounded-xl p-3" style={{ background: "color-mix(in srgb, var(--color-cobalt) 12%, var(--color-canvas))", border: "1px solid color-mix(in srgb, var(--color-cobalt) 25%, var(--color-border))" }}>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--color-cobalt)" }}>
                   Your task
                 </p>

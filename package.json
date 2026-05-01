@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "next dev",
     "build": "next build",
-    "start": "NODE_ENV=production tsx server.ts"
+    "start": "next start"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
-    "@e2b/code-interpreter": "^2.4.0",
     "@fortune-sheet/core": "^1.0.4",
     "@fortune-sheet/react": "^1.0.4",
     "@monaco-editor/react": "^4.7.0",
@@ -40,10 +39,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/ws": "^8.18.1",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5",
-    "ws": "^8.20.0"
+    "typescript": "^5"
   }
 }

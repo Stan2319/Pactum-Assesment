@@ -45,7 +45,13 @@ export interface DocPatchDeck {
   value: string
 }
 
-export type DocPatch = DocPatchReportEmail | DocPatchSpreadsheet | DocPatchDeck
+export interface DocPatchCode {
+  type: "code_replace"
+  path: string
+  content: string
+}
+
+export type DocPatch = DocPatchReportEmail | DocPatchSpreadsheet | DocPatchDeck | DocPatchCode
 
 // Document state shapes (stored in sessions.document_state)
 export interface DocumentStateReport {
@@ -67,11 +73,18 @@ export interface DocumentStateDeck {
   slides: DeckSlide[]
 }
 
+export interface DocumentStateCode {
+  files: Record<string, string>
+  activeFile: string
+  language: string
+}
+
 export type DocumentState =
   | DocumentStateReport
   | DocumentStateEmail
   | DocumentStateSpreadsheet
   | DocumentStateDeck
+  | DocumentStateCode
 
 // ── Core entities ────────────────────────────────────────────────
 
@@ -85,6 +98,7 @@ export interface Assessment {
   tension_level: "junior" | "senior"
   workspace_type: WorkspaceType
   language?: "python" | "javascript"
+  starter_files?: Record<string, string>
   is_active: boolean
   created_at: string
 }

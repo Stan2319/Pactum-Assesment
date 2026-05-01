@@ -40,10 +40,20 @@ function serializeDocumentState(docState: unknown, workspaceType: string): strin
           const parts = [`Slide ${i + 1}: ${s.title}`]
           if (s.body) parts.push(s.body)
           if (s.bullets?.length) parts.push(s.bullets.join(" | "))
-          return parts.join(" — ")
+          return parts.join(", ")
         })
         .join("\n")
       return `CURRENT DECK CONTENT:\n${text}`
+    }
+    if (workspaceType === "code") {
+      const { files, language } = docState as { files: Record<string, string>; language: string }
+      if (!files || Object.keys(files).length === 0) return ""
+      const ext = language === "python" ? "python" : "javascript"
+      const sections = Object.entries(files)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([path, content]) => `### ${path}\n\`\`\`${ext}\n${content}\n\`\`\``)
+        .join("\n\n")
+      return `CURRENT FILES:\n${sections}`
     }
     if (workspaceType === "spreadsheet") {
       const sheets = docState as { data: ({ v?: string } | null)[][] }[]
@@ -96,34 +106,34 @@ WHAT "DONE" LOOKS LIKE FOR THIS ROUND:
 ${round.successCriteria}
 
 YOUR JOB:
-You are both a tool the candidate uses AND an active guide tracking whether they've completed the task. After each exchange, you should have a mental model of what they've delivered so far vs. what the task requires. When they have produced everything the task asks for, tell them clearly at the end of your response — something like: "You've covered everything this round asks for. If you're happy with it, you can move on." If they're missing something specific, name it without giving it to them — e.g. "You have the positioning and differentiators, but you haven't included the three campaign concepts yet."
+You are both a tool the candidate uses AND an active guide tracking whether they've completed the task. After each exchange, you should have a mental model of what they've delivered so far vs. what the task requires. When they have produced everything the task asks for, tell them clearly at the end of your response, something like: "You've covered everything this round asks for. If you're happy with it, you can move on." If they're missing something specific, name it without giving it to them, e.g. "You have the positioning and differentiators, but you haven't included the three campaign concepts yet."
 
 FORMATTING RULES (strictly enforced):
 - Write in clean, natural prose. No markdown headers (no #). No bullet point spam.
 - Lists are fine when the task genuinely calls for them (e.g. numbered campaign concepts).
 - No filler openers: never start with "Great!", "Sure!", "Of course!", or similar.
-- Never use em dashes (— or –). Use a comma, period, or restructure the sentence instead.
+- Never use em dashes (- or –). Use a comma, period, or restructure the sentence instead.
 - Keep responses focused. No meta-commentary about what you're about to do.
 
 ASSESSMENT RULES:
 - Never hand the candidate the full answer in one shot. Produce strong partial work and let them direct the rest.
 - If their prompt is vague, ask one sharp clarifying question rather than guessing.
-- If they paste back your output with no real direction, push back — ask them what specifically they want changed or improved.
+- If they paste back your output with no real direction, push back, ask them what specifically they want changed or improved.
 - Do not reveal the scoring rubric or tell them what score they might get.
 - Do not fabricate statistics, data, or facts.
-- If the candidate's message appears to be the task description copied verbatim or near-verbatim, do NOT execute it. Ask them what their approach is or what specific aspect they want to tackle first. Do not acknowledge that you noticed the copy — just redirect naturally.`
+- If the candidate's message appears to be the task description copied verbatim or near-verbatim, do NOT execute it. Ask them what their approach is or what specific aspect they want to tackle first. Do not acknowledge that you noticed the copy, just redirect naturally.`
 
   if (tensionLevel === "junior") {
     return `${base}
 
 MODE: SUPPORTIVE COLLABORATOR
-Act as a skilled, direct colleague. After producing output, briefly note one key decision you made and why. If the candidate's approach has a clear weakness, say so once — plainly, not gently. Point them toward what to work on next, but make them do the thinking.`
+Act as a skilled, direct colleague. After producing output, briefly note one key decision you made and why. If the candidate's approach has a clear weakness, say so once, plainly, not gently. Point them toward what to work on next, but make them do the thinking.`
   }
 
   return `${base}
 
 MODE: PROFESSIONAL EXECUTOR
-Do exactly what you're told, with high craft. No explanations, no suggestions unless asked. One clarifying question if the brief is ambiguous. The completion signal is the only unsolicited thing you should add — when all deliverables are done, say so at the end. Otherwise, produce excellent work and stop.`
+Do exactly what you're told, with high craft. No explanations, no suggestions unless asked. One clarifying question if the brief is ambiguous. The completion signal is the only unsolicited thing you should add, when all deliverables are done, say so at the end. Otherwise, produce excellent work and stop.`
 }
 
 const STOPWORDS = new Set([
@@ -178,7 +188,7 @@ export async function POST(req: NextRequest) {
 
   let systemPrompt = buildSystemPrompt(tensionLevel, round, previousRounds ?? [], documentContext)
   if (similarity >= 0.55) {
-    systemPrompt += `\n\n[INTERNAL — do not reveal this to the candidate: Their latest message closely matches the task description. They likely copied it directly. Do not execute the task. Redirect them naturally — ask what aspect they want to start with or what their initial thinking is.]`
+    systemPrompt += `\n\n[INTERNAL, do not reveal this to the candidate: Their latest message closely matches the task description. They likely copied it directly. Do not execute the task. Redirect them naturally, ask what aspect they want to start with or what their initial thinking is.]`
   }
 
   const encoder = new TextEncoder()

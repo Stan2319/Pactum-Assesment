@@ -16,8 +16,8 @@ export default async function NewAssessmentPage() {
 
   return (
     <DashboardShell companyName={company?.name ?? "Your Company"} userEmail={user.email ?? ""}>
-      <div className="max-w-2xl">
-        <div className="mb-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-ink)" }}>
             Create assessment
           </h1>

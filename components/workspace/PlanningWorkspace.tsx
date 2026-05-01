@@ -51,7 +51,7 @@ export function PlanningWorkspace({ assessment, round, onSubmit }: PlanningWorks
 
           <div
             className="rounded-xl p-4"
-            style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}
+            style={{ background: "color-mix(in srgb, var(--color-cobalt) 12%, var(--color-canvas))", border: "1px solid color-mix(in srgb, var(--color-cobalt) 30%, var(--color-border))" }}
           >
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-cobalt)" }}>
               Your task

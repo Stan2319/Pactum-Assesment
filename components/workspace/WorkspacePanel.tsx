@@ -5,6 +5,7 @@ import { ReportWorkspace } from "./ReportWorkspace"
 import { EmailWorkspace } from "./EmailWorkspace"
 import { SpreadsheetWorkspace } from "./SpreadsheetWorkspace"
 import { DeckWorkspace } from "./DeckWorkspace"
+import { CodeFileWorkspace } from "./CodeFileWorkspace"
 import { SuggestionOverlay } from "./SuggestionOverlay"
 import type {
   WorkspaceType,
@@ -13,18 +14,20 @@ import type {
   DocumentStateEmail,
   DocumentStateSpreadsheet,
   DocumentStateDeck,
+  DocumentStateCode,
   DocPatch,
   DocPatchReportEmail,
   DocPatchSpreadsheet,
   DocPatchDeck,
+  DocPatchCode,
 } from "@/lib/types"
 
 interface WorkspacePanelProps {
   workspaceType: WorkspaceType
   documentState: DocumentState | null
-  /** The patch waiting for user approval — drives the overlay */
+  /** The patch waiting for user approval, drives the overlay */
   suggestedPatch: DocPatch | null
-  /** The confirmed patch — passed to workspaces to apply */
+  /** The confirmed patch, passed to workspaces to apply */
   pendingPatch: DocPatch | null
   /** True while the patch API call is in flight */
   isGeneratingPatch: boolean
@@ -91,8 +94,8 @@ export function WorkspacePanel({
 
       {/* Workspace content */}
       <div className="flex-1 overflow-hidden relative">
-        {/* Cobalt ring overlay when suggestion is pending */}
-        {suggestedPatch && (
+        {/* Cobalt ring overlay when suggestion is pending (not for code, uses inline diff) */}
+        {suggestedPatch && workspaceType !== "code" && (
           <div
             className="absolute inset-0 z-10 pointer-events-none"
             style={{ boxShadow: "inset 0 0 0 2px var(--color-cobalt)", opacity: 0.4 }}
@@ -135,9 +138,21 @@ export function WorkspacePanel({
           />
         )}
 
-        {/* Suggestion overlay — shown when patch is waiting for approval */}
+        {workspaceType === "code" && documentState != null && (
+          <CodeFileWorkspace
+            initialState={documentState as DocumentStateCode}
+            suggestedPatch={suggestedPatch as DocPatchCode | null}
+            pendingPatch={pendingPatch as DocPatchCode | null}
+            onAcceptPatch={onAcceptPatch}
+            onDismissPatch={onDismissPatch}
+            onPatchApplied={onPatchApplied}
+            onChange={(state) => onDocumentChange(state)}
+          />
+        )}
+
+        {/* Suggestion overlay, shown when patch is waiting for approval (not for code) */}
         <AnimatePresence>
-          {suggestedPatch && (
+          {suggestedPatch && workspaceType !== "code" && (
             <SuggestionOverlay
               patch={suggestedPatch}
               workspaceType={workspaceType}

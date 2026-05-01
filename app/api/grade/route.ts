@@ -20,6 +20,8 @@ When scoring Output Quality, evaluate the actual content of the final document, 
 - Critical Thinking and Mistake Catching (15 pts): Did they catch errors, push back on weak suggestions, apply judgment?
 - Efficiency and Process (10 pts): Reasonable pacing, clean progression, minimal wasted steps
 
+Never use em dashes (— or –) in any text fields. Use a comma, colon, or restructure the sentence instead.
+
 Return ONLY valid JSON in this exact format (no markdown, no explanation outside JSON):
 {
   "total_score": 0,
@@ -53,6 +55,17 @@ export async function POST(req: NextRequest) {
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 })
+    }
+
+    // Prevent re-grading a session that already has a score (replay / double-billing protection)
+    const { data: existingScore } = await supabase
+      .from("scores")
+      .select("id")
+      .eq("session_id", sessionId)
+      .maybeSingle()
+
+    if (existingScore) {
+      return NextResponse.json({ error: "Session already graded" }, { status: 409 })
     }
 
     const assessment = session.assessments as Assessment
@@ -113,10 +126,14 @@ export async function POST(req: NextRequest) {
 
     const rawText = response.content[0].type === "text" ? response.content[0].text : "{}"
 
+    // Strip markdown fences if Claude wrapped the JSON
+    const cleanedText = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim()
+
     let scoreData
     try {
-      scoreData = JSON.parse(rawText)
+      scoreData = JSON.parse(cleanedText)
     } catch {
+      console.error("Grade parse error. Raw response (first 200 chars):", rawText?.slice(0, 200))
       return NextResponse.json({ error: "Failed to parse grader response" }, { status: 500 })
     }
 

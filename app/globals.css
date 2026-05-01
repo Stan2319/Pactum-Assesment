@@ -47,6 +47,18 @@
   --font-sans: "Inter", -apple-system, system-ui, sans-serif;
 }
 
+/* ─── Dark mode token overrides ─────────────────────────────── */
+[data-dark="true"] {
+  --color-canvas:      #0f0f10;
+  --color-surface:     #18181b;
+  --color-ink:         #f4f4f5;
+  --color-ink-near:    #e4e4e7;
+  --color-slate:       #a1a1aa;
+  --color-silver:      #52525b;
+  --color-border:      #27272a;
+  --color-border-input:#3f3f46;
+}
+
 /* ─── Base ───────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -94,6 +106,7 @@ body {
 .btn-pill-dark {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   background: var(--color-ink);
   color: #fff;
@@ -106,6 +119,9 @@ body {
   transition: opacity 0.2s;
 }
 .btn-pill-dark:hover { opacity: 0.85; }
+[data-dark="true"] .btn-pill-dark {
+  color: #0f0f10;
+}
 
 .btn-pill-outline {
   display: inline-flex;

@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { DashboardShell } from "@/components/app/DashboardShell"
-import type { Message, Score, Assessment, Candidate } from "@/lib/types"
+import { RoundReplay } from "@/components/app/RoundReplay"
+import type { Message, Score, Assessment, Candidate, DocumentStateReport, DocumentStateEmail, DocumentStateSpreadsheet, DocumentStateDeck } from "@/lib/types"
 
 interface Props {
   params: Promise<{ sessionId: string }>
@@ -47,7 +48,7 @@ export default async function ResultsPage({ params }: Props) {
 
   return (
     <DashboardShell companyName={company?.name ?? "Your Company"} userEmail={user.email ?? ""}>
-      <div className="max-w-3xl space-y-8">
+      <div className="max-w-3xl mx-auto space-y-8">
         {/* Header */}
         <div>
           <Link
@@ -119,7 +120,7 @@ export default async function ResultsPage({ params }: Props) {
               {/* Summary */}
               <div className="flex-1 min-w-0 pt-2">
                 <p className="text-base leading-relaxed" style={{ color: "var(--color-ink-near)" }}>
-                  {score.summary}
+                  {score.summary?.replace(/\u2014|\u2013/g, ",")}
                 </p>
               </div>
             </div>
@@ -164,107 +165,189 @@ export default async function ResultsPage({ params }: Props) {
           </div>
         )}
 
+        {/* Final output */}
+        <div>
+          <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
+            Final output
+          </h2>
+          {session.document_state ? (
+            <FinalOutput workspaceType={assessment.workspace_type} docState={session.document_state} />
+          ) : (
+            <div
+              className="rounded-2xl p-8 text-center"
+              style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+            >
+              <p className="text-sm" style={{ color: "var(--color-silver)" }}>
+                The candidate did not produce any output.
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Session replay */}
         <div>
-          <h2 className="text-sm font-semibold mb-4 uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
+          <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
             Session replay
           </h2>
-          <div className="space-y-4">
-            {assessment.rounds.map((round) => {
-              const roundMessages = messages.filter((m) => m.round === round.round)
-              const userCount = roundMessages.filter((m) => m.role === "user").length
-
-              return (
-                <div
-                  key={round.round}
-                  className="rounded-2xl overflow-hidden"
-                  style={{ border: "1px solid var(--color-border)" }}
-                >
-                  {/* Round header */}
-                  <div
-                    className="px-5 py-4"
-                    style={{ background: "var(--color-canvas)", borderBottom: "1px solid var(--color-border)" }}
-                  >
-                    <div className="flex items-baseline justify-between gap-4 mb-1.5">
-                      <p className="text-sm font-bold" style={{ color: "var(--color-ink)" }}>
-                        Round {round.round}: {round.title}
-                      </p>
-                      <span className="text-xs shrink-0" style={{ color: "var(--color-silver)" }}>
-                        {userCount} prompt{userCount !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <p className="text-xs leading-relaxed" style={{ color: "var(--color-slate)" }}>
-                      {round.prompt}
-                    </p>
-                  </div>
-
-                  {/* Messages */}
-                  <div style={{ background: "var(--color-surface)" }}>
-                    {roundMessages.length === 0 ? (
-                      <p className="px-5 py-5 text-sm" style={{ color: "var(--color-silver)" }}>
-                        No messages in this round.
-                      </p>
-                    ) : (
-                      roundMessages.map((msg, i) => {
-                        const isUser = msg.role === "user"
-                        const isLast = i === roundMessages.length - 1
-                        return (
-                          <div
-                            key={msg.id}
-                            className="px-5 py-4"
-                            style={{
-                              borderBottom: isLast ? "none" : "1px solid var(--color-border)",
-                              background: isUser ? "var(--color-canvas)" : "var(--color-surface)",
-                            }}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <div
-                                className="flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0"
-                                style={{
-                                  width: 20,
-                                  height: 20,
-                                  background: isUser ? "var(--color-ink)" : "var(--color-cobalt)",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                }}
-                              >
-                                {isUser ? "C" : "A"}
-                              </div>
-                              <span
-                                className="text-xs font-semibold"
-                                style={{ color: isUser ? "var(--color-ink)" : "var(--color-cobalt)" }}
-                              >
-                                {isUser ? "Candidate" : "Claude"}
-                              </span>
-                              <span className="text-xs" style={{ color: "var(--color-silver)" }}>
-                                {new Date(msg.created_at).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                            </div>
-                            <p
-                              className="text-sm leading-relaxed whitespace-pre-wrap"
-                              style={{
-                                color: "var(--color-ink-near)",
-                                paddingLeft: 28,
-                              }}
-                            >
-                              {msg.content}
-                            </p>
-                          </div>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <RoundReplay rounds={assessment.rounds} messages={messages} />
         </div>
       </div>
     </DashboardShell>
   )
+}
+
+// Strip dangerous elements/attributes from candidate-generated HTML before rendering.
+// Allows only the Tiptap-compatible subset: block elements, inline formatting, tables.
+function sanitizeHtml(html: string): string {
+  return html
+    // Remove script, style, iframe, object, embed, form, input, link, meta tags entirely
+    .replace(/<(script|style|iframe|object|embed|form|input|button|link|meta|base|noscript)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/<(script|style|iframe|object|embed|form|input|button|link|meta|base|noscript)[^>]*\/?>/gi, "")
+    // Remove on* event attributes (onclick, onerror, onload, etc.)
+    .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "")
+    // Remove javascript: and data: URIs in href/src/action
+    .replace(/\s+(href|src|action)\s*=\s*["']?\s*(javascript:|data:|vbscript:)[^"'\s>]*/gi, "")
+}
+
+function FinalOutput({ workspaceType, docState }: { workspaceType: string; docState: unknown }) {
+  const shell = (children: React.ReactNode) => (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ border: "1px solid var(--color-border)", background: "var(--color-surface)" }}
+    >
+      {children}
+    </div>
+  )
+
+  if (workspaceType === "report") {
+    const { html } = docState as DocumentStateReport
+    return shell(
+      <div
+        className="p-6 prose prose-sm max-w-none"
+        style={{ color: "var(--color-ink-near)" }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html || "") || "<p style='color:var(--color-silver)'>No content.</p>" }}
+      />
+    )
+  }
+
+  if (workspaceType === "email") {
+    const { to, from, subject, html } = docState as DocumentStateEmail
+    return shell(
+      <>
+        <div className="px-5 py-4 space-y-1.5" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-canvas)" }}>
+          {[["To", to], ["From", from], ["Subject", subject]].map(([label, val]) => (
+            <div key={label} className="flex gap-3 text-sm">
+              <span className="w-14 shrink-0 font-medium" style={{ color: "var(--color-silver)" }}>{label}</span>
+              <span style={{ color: "var(--color-ink-near)" }}>{val}</span>
+            </div>
+          ))}
+        </div>
+        <div
+          className="p-6 prose prose-sm max-w-none"
+          style={{ color: "var(--color-ink-near)" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(html || "") || "<p style='color:var(--color-silver)'>No content.</p>" }}
+        />
+      </>
+    )
+  }
+
+  if (workspaceType === "spreadsheet") {
+    const { data } = docState as DocumentStateSpreadsheet
+    const rows = Array.isArray(data) ? data as string[][] : []
+    if (!rows.length) return shell(<p className="p-6 text-sm" style={{ color: "var(--color-silver)" }}>No data.</p>)
+    return shell(
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                {(Array.isArray(row) ? row : []).map((cell, ci) => (
+                  <td
+                    key={ci}
+                    className="px-3 py-2"
+                    style={{
+                      color: ri === 0 ? "var(--color-ink)" : "var(--color-ink-near)",
+                      fontWeight: ri === 0 ? 600 : 400,
+                      borderRight: "1px solid var(--color-border)",
+                      background: ri === 0 ? "var(--color-canvas)" : "transparent",
+                    }}
+                  >
+                    {String(cell ?? "")}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  if (workspaceType === "deck") {
+    const { slides } = docState as DocumentStateDeck
+    if (!slides?.length) return shell(<p className="p-6 text-sm" style={{ color: "var(--color-silver)" }}>No slides.</p>)
+    return (
+      <div className="space-y-3">
+        {slides.map((slide, i) => (
+          <div
+            key={slide.id ?? i}
+            className="rounded-2xl p-5"
+            style={{ border: "1px solid var(--color-border)", background: "var(--color-surface)" }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span
+                className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: "var(--color-canvas)", color: "var(--color-slate)", border: "1px solid var(--color-border)" }}
+              >
+                Slide {i + 1}
+              </span>
+              <span className="text-xs" style={{ color: "var(--color-silver)" }}>{slide.layout}</span>
+            </div>
+            {slide.title && <p className="font-bold text-base mb-1" style={{ color: "var(--color-ink)", letterSpacing: "-0.01em" }}>{slide.title}</p>}
+            {slide.body && <p className="text-sm" style={{ color: "var(--color-ink-near)" }}>{slide.body}</p>}
+            {slide.bullets?.length ? (
+              <ul className="mt-2 space-y-1">
+                {slide.bullets.map((b, bi) => (
+                  <li key={bi} className="text-sm flex gap-2" style={{ color: "var(--color-ink-near)" }}>
+                    <span style={{ color: "var(--color-silver)" }}>·</span> {b}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (workspaceType === "code") {
+    const state = docState as { files?: Record<string, string>; code?: string; language?: string }
+    const files = state.files ?? (state.code ? { "main": state.code } : {})
+    const entries = Object.entries(files)
+    if (!entries.length) return shell(<p className="p-6 text-sm" style={{ color: "var(--color-silver)" }}>No files.</p>)
+    return (
+      <div className="space-y-3">
+        {entries.map(([filename, content]) => (
+          <div key={filename} className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
+            <div
+              className="px-4 py-2.5 text-xs font-semibold"
+              style={{ background: "var(--color-canvas)", borderBottom: "1px solid var(--color-border)", color: "var(--color-slate)", fontFamily: "monospace" }}
+            >
+              {filename}
+            </div>
+            <pre
+              className="p-4 text-xs overflow-x-auto"
+              style={{ color: "var(--color-ink-near)", fontFamily: "monospace", lineHeight: 1.6, margin: 0, background: "var(--color-surface)" }}
+            >
+              {content}
+            </pre>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return null
 }
 
 function scoreColor(score: number) {
@@ -331,7 +414,7 @@ function FeedbackColumn({
             className="text-xs leading-relaxed px-2.5 py-1.5 rounded-lg"
             style={{ background: bg, color }}
           >
-            {item}
+            {item.replace(/\u2014|\u2013/g, ",")}
           </li>
         ))}
       </ul>

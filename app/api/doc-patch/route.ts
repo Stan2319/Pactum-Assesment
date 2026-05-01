@@ -16,9 +16,9 @@ function buildPatchSystemPrompt(workspaceType: WorkspaceType, currentDocState: D
 - Use "replace" to overwrite the entire document, "append" to add after existing content.
 - HTML must be valid Tiptap-compatible: p, h2, h3, ul, ol, li, table, thead, tbody, tr, td, th, strong, em, br.
 - STRUCTURE RULES (strictly enforced):
-  - Every distinct section or topic gets an <h2> or <h3> heading — never dump multiple sections into one block.
+  - Every distinct section or topic gets an <h2> or <h3> heading, never dump multiple sections into one block.
   - Each paragraph is ONE idea or point. Split long content into multiple <p> tags.
-  - Any list of items (concepts, differentiators, steps, options) must use <ul><li>...</li></ul> or <ol><li>...</li></ul> — never write a list as a single paragraph.
+  - Any list of items (concepts, differentiators, steps, options) must use <ul><li>...</li></ul> or <ol><li>...</li></ul>, never write a list as a single paragraph.
   - Use <strong> for key terms, names, or labels within a paragraph.
   - Never output a single <p> containing everything. If the content has sections, use headings. If it has items, use lists.`,
     email: `Return ONLY valid JSON with no markdown or explanation:
@@ -35,8 +35,13 @@ function buildPatchSystemPrompt(workspaceType: WorkspaceType, currentDocState: D
 - slideIndex is 0-indexed.
 - For field "bullets", value must be a JSON array string: "[\"bullet 1\", \"bullet 2\"]"
 - Only one field per patch.`,
-    code: `Return exactly: { "skip": true }
-Code workspaces do not use document patches.`,
+    code: `Return ONLY valid JSON with no markdown or explanation:
+{ "type": "code_replace", "path": "<filename>", "content": "<full file content as a string>" }
+- "path" is the filename (e.g. "main.py", "utils.py", "solution.js"). If updating an existing file, use its exact name. If creating a new file, choose a descriptive name.
+- "content" is always the full file content, never a diff or partial snippet.
+- Preserve correct indentation and syntax for the language.
+- Only generate a patch if the message contains actual code the candidate should use.
+- If the message is conversational, asks a question, or gives direction without code, return: { "skip": true }`,
   }
 
   return `You are a document patch generator for a hiring assessment platform.

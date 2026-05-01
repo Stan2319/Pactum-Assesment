@@ -18,6 +18,9 @@ function describePatch(patch: DocPatch, workspaceType: WorkspaceType): string {
   if (workspaceType === "deck" && "slideIndex" in patch) {
     return `changes to slide ${patch.slideIndex + 1}`
   }
+  if ("type" in patch && patch.type === "code_replace") {
+    return "a code update"
+  }
   if ("type" in patch && (patch.type === "replace" || patch.type === "append")) {
     return patch.type === "replace" ? "a full document replacement" : "content to append"
   }
