@@ -29,9 +29,10 @@ export default async function DashboardPage() {
   if (!company && user.email) {
     const serviceSupabase = await createServiceClient()
     const name = user.user_metadata?.company_name ?? user.email.split("@")[0]
-    await serviceSupabase
+    const { error: upsertError } = await serviceSupabase
       .from("companies")
       .upsert({ id: user.id, name, email: user.email }, { onConflict: "id" })
+    if (upsertError) console.error("Company upsert error:", upsertError.message)
     const { data: refetched } = await serviceSupabase
       .from("companies")
       .select("*")
