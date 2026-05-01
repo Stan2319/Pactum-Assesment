@@ -16,12 +16,31 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
   const pathname = usePathname()
   const router = useRouter()
   const [accountOpen, setAccountOpen] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
   const popoverRef = useRef<HTMLDivElement>(null)
 
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/login")
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    setDeleteError("")
+    try {
+      const res = await fetch("/api/auth/delete-account", { method: "DELETE" })
+      const data = await res.json()
+      if (!res.ok) { setDeleteError(data.error ?? "Something went wrong."); setDeleting(false); return }
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push("/login")
+    } catch {
+      setDeleteError("Something went wrong.")
+      setDeleting(false)
+    }
   }
 
   useEffect(() => {
@@ -122,7 +141,7 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
 
               <div className="my-1 border-t" style={{ borderColor: "var(--color-border)" }} />
 
-              <MenuAction icon={<Trash2 size={13} />} label="Delete account" onClick={() => setAccountOpen(false)} danger />
+              <MenuAction icon={<Trash2 size={13} />} label="Delete account" onClick={() => { setAccountOpen(false); setDeleteConfirm(true) }} danger />
             </div>
           )}
 
@@ -157,10 +176,50 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
 
       {/* Main content */}
       <div className="pl-56">
-        <main className="max-w-5xl mx-auto px-8 py-10">
+        <main className="px-8 py-10">
           {children}
         </main>
       </div>
+
+      {/* Delete account confirmation modal */}
+      {deleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "rgba(0,0,0,0.4)" }}
+          onClick={(e) => { if (e.target === e.currentTarget && !deleting) { setDeleteConfirm(false); setDeleteError("") } }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-6"
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}
+          >
+            <h2 className="text-base font-bold mb-1" style={{ color: "var(--color-ink)" }}>Delete account</h2>
+            <p className="text-sm mb-5" style={{ color: "var(--color-slate)" }}>
+              This permanently deletes your company, all assessments, candidates, and results. This cannot be undone.
+            </p>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4">{deleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDeleteConfirm(false); setDeleteError("") }}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                style={{ background: "var(--color-canvas)", color: "var(--color-ink)", border: "1px solid var(--color-border)", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                style={{ background: "#dc2626", color: "#fff", cursor: "pointer" }}
+              >
+                {deleting ? "Deleting…" : "Yes, delete everything"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
