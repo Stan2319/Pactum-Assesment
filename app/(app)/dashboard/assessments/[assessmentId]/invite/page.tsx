@@ -34,7 +34,7 @@ export default async function InvitePage({ params }: Props) {
 
   const { data: existingCandidates } = await supabase
     .from("candidates")
-    .select("id, name, email, invite_token, created_at")
+    .select("id, name, email, invite_token, created_at, sessions(status)")
     .eq("assessment_id", assessmentId)
     .order("created_at", { ascending: false })
 

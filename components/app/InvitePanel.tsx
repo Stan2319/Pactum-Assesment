@@ -8,6 +8,7 @@ interface Candidate {
   email: string
   invite_token: string
   created_at: string
+  sessions?: { status: string }[] | null
 }
 
 interface InvitePanelProps {
@@ -15,6 +16,13 @@ interface InvitePanelProps {
   assessmentId: string
   siteUrl: string
   initialCandidates: Candidate[]
+}
+
+function candidateStatus(c: Candidate): { label: string; color: string } {
+  const session = c.sessions?.[0]
+  if (session?.status === "completed") return { label: "Completed", color: "#065f46" }
+  if (session?.status === "in_progress" || c.name) return { label: c.name ? `In progress · ${c.name}` : "In progress", color: "#92400e" }
+  return { label: "Not started", color: "var(--color-silver)" }
 }
 
 export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCandidates }: InvitePanelProps) {
@@ -45,6 +53,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
         email: email.trim(),
         invite_token: data.token,
         created_at: new Date().toISOString(),
+        sessions: null,
       }
       setCandidates((prev) => [newCandidate, ...prev])
       setEmail("")
@@ -104,7 +113,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
           <button
             type="submit"
             disabled={loading || !email.trim()}
-            className="shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
+            className="cursor-pointer shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
             style={{ background: "var(--color-ink)", color: "#fff" }}
           >
             {loading ? "Generating…" : "Generate link"}
@@ -138,25 +147,24 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
             {candidates.map((c, i) => {
               const link = `${siteUrl}/candidate/${c.invite_token}`
               const isCopied = copiedToken === c.invite_token
+              const status = candidateStatus(c)
               return (
                 <div
                   key={c.id}
                   className="px-5 py-4 flex items-center gap-4"
-                  style={{
-                    borderTop: i > 0 ? "1px solid var(--color-border)" : undefined,
-                  }}
+                  style={{ borderTop: i > 0 ? "1px solid var(--color-border)" : undefined }}
                 >
                   {/* Email + status */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: "var(--color-ink-near)" }}>
                       {c.email}
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--color-silver)" }}>
-                      {c.name ? `Started · ${c.name}` : "Not started"}
+                    <p className="text-xs mt-0.5 font-medium" style={{ color: status.color }}>
+                      {status.label}
                     </p>
                   </div>
 
-                  {/* Link + copy */}
+                  {/* Link preview */}
                   <div
                     className="hidden sm:flex items-center gap-2 rounded-lg px-2.5 py-1.5 max-w-[240px]"
                     style={{ background: "var(--color-canvas)", border: "1px solid var(--color-border)" }}
@@ -168,7 +176,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
 
                   <button
                     onClick={() => handleCopy(c.invite_token)}
-                    className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                    className="cursor-pointer shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                     style={{
                       background: isCopied ? "#d1fae5" : "var(--color-ink)",
                       color: isCopied ? "#065f46" : "#fff",
@@ -188,7 +196,6 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
           No candidates invited yet. Enter an email above to generate their unique link.
         </p>
       )}
-
     </div>
   )
 }
