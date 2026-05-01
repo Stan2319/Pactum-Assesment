@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { DashboardShell } from "@/components/app/DashboardShell"
 import { RecentCandidates } from "@/components/app/RecentCandidates"
+import { DeleteAssessmentButton } from "@/components/app/DeleteAssessmentButton"
 import type { Assessment } from "@/lib/types"
 
 const WORKSPACE_LABELS: Record<string, string> = {
@@ -104,53 +105,56 @@ export default async function DashboardPage() {
           />
           <StatCard
             label="Avg score"
-            value={avgScore != null ? String(avgScore) : "—"}
+            value={avgScore != null ? String(avgScore) : "-"}
             suffix={avgScore != null ? "/100" : undefined}
           />
           <StatCard
             label="Completion rate"
-            value={completionRate != null ? `${completionRate}%` : "—"}
+            value={completionRate != null ? `${completionRate}%` : "-"}
           />
         </div>
 
-        {/* Assessments */}
-        <section>
-          <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
-            Assessments
-          </h2>
+        {/* Two-column: assessments left, candidates right */}
+        <div className="grid grid-cols-5 gap-10 items-start">
+          {/* Assessments — narrower left column */}
+          <section className="col-span-2">
+            <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
+              Assessments
+            </h2>
 
-          {!assessments || assessments.length === 0 ? (
-            <div
-              className="rounded-2xl p-12 text-center"
-              style={{ border: "1.5px dashed var(--color-border)", background: "var(--color-surface)" }}
-            >
-              <p className="text-base font-semibold mb-1" style={{ color: "var(--color-ink-near)" }}>
-                No assessments yet
-              </p>
-              <p className="text-sm mb-5" style={{ color: "var(--color-slate)" }}>
-                Create your first assessment to start evaluating candidates with AI.
-              </p>
-              <Link href="/dashboard/assessments/new" className="btn-pill-dark text-sm inline-flex">
-                Create assessment
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {(assessments as Assessment[]).map((a) => (
-                <AssessmentCard
-                  key={a.id}
-                  assessment={a}
-                  sessionCount={sessionsByAssessment[a.id] ?? 0}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+            {!assessments || assessments.length === 0 ? (
+              <div
+                className="rounded-2xl p-10 text-center"
+                style={{ border: "1.5px dashed var(--color-border)", background: "var(--color-surface)" }}
+              >
+                <p className="text-sm font-semibold mb-1" style={{ color: "var(--color-ink-near)" }}>
+                  No assessments yet
+                </p>
+                <p className="text-xs mb-4" style={{ color: "var(--color-slate)" }}>
+                  Create your first to start evaluating candidates.
+                </p>
+                <Link href="/dashboard/assessments/new" className="btn-pill-dark text-xs inline-flex">
+                  Create assessment
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {(assessments as Assessment[]).map((a) => (
+                  <AssessmentCard
+                    key={a.id}
+                    assessment={a}
+                    sessionCount={sessionsByAssessment[a.id] ?? 0}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
 
-        {/* Recent sessions */}
-        {recentSessions && recentSessions.length > 0 && (
-          <RecentCandidates sessions={recentSessions as any} assessments={assessments ?? []} />
-        )}
+          {/* Recent candidates — wider right column */}
+          <section className="col-span-3">
+            <RecentCandidates sessions={recentSessions as any ?? []} assessments={assessments ?? []} />
+          </section>
+        </div>
       </div>
     </DashboardShell>
   )
@@ -247,21 +251,24 @@ function AssessmentCard({ assessment, sessionCount }: { assessment: Assessment; 
 
       {/* Footer row */}
       <div
-        className="flex items-center gap-4 mt-4 pt-4"
+        className="flex items-center justify-between gap-4 mt-4 pt-4"
         style={{ borderTop: "1px solid var(--color-border)" }}
       >
-        <span className="text-xs" style={{ color: "var(--color-silver)" }}>
-          {assessment.rounds.length} round{assessment.rounds.length !== 1 ? "s" : ""}
-        </span>
-        <span style={{ color: "var(--color-border)" }}>·</span>
-        <span className="text-xs" style={{ color: "var(--color-silver)" }}>
-          Created{" "}
-          {new Date(assessment.created_at).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-xs" style={{ color: "var(--color-silver)" }}>
+            {assessment.rounds.length} round{assessment.rounds.length !== 1 ? "s" : ""}
+          </span>
+          <span style={{ color: "var(--color-border)" }}>·</span>
+          <span className="text-xs" style={{ color: "var(--color-silver)" }}>
+            Created{" "}
+            {new Date(assessment.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </span>
+        </div>
+        <DeleteAssessmentButton assessmentId={assessment.id} />
       </div>
     </div>
   )

@@ -25,6 +25,7 @@ create table if not exists assessments (
   workspace_type text not null default 'report' check (workspace_type in ('report', 'email', 'spreadsheet', 'deck', 'code')),
   tension_level  text not null default 'junior' check (tension_level in ('junior', 'senior')),
   language       text check (language in ('python', 'javascript')), -- only set when workspace_type = 'code'
+  starter_files  jsonb,              -- optional: Record<filename, content> for code workspace templates
   is_active      boolean not null default true,
   created_at     timestamptz default now()
 );
@@ -138,3 +139,18 @@ create index if not exists idx_sessions_company       on sessions(company_id);
 create index if not exists idx_messages_session       on messages(session_id);
 create index if not exists idx_scores_session         on scores(session_id);
 create index if not exists idx_scores_company         on scores(company_id);
+
+-- ── Migrations (run against existing databases) ──────────────
+alter table assessments add column if not exists starter_files jsonb;
+
+-- Fix missing CASCADE on scores foreign keys
+-- Run these if the scores table already exists without CASCADE:
+-- alter table scores drop constraint scores_candidate_id_fkey;
+-- alter table scores add constraint scores_candidate_id_fkey
+--   foreign key (candidate_id) references candidates(id) on delete cascade;
+-- alter table scores drop constraint scores_assessment_id_fkey;
+-- alter table scores add constraint scores_assessment_id_fkey
+--   foreign key (assessment_id) references assessments(id) on delete cascade;
+-- alter table scores drop constraint scores_company_id_fkey;
+-- alter table scores add constraint scores_company_id_fkey
+--   foreign key (company_id) references companies(id) on delete cascade;

@@ -47,6 +47,26 @@ export default async function CandidatePage({ params }: Props) {
 
   if (!session) notFound()
 
+  // Block re-entry once completed
+  if (session.status === "completed") {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: "var(--color-canvas)" }}
+      >
+        <div className="w-full max-w-sm text-center">
+          <div className="text-4xl mb-4">✓</div>
+          <h1 className="text-xl font-bold mb-2" style={{ color: "var(--color-ink)" }}>
+            Assessment complete
+          </h1>
+          <p className="text-sm" style={{ color: "var(--color-slate)" }}>
+            You&apos;ve already submitted this assessment. Your results have been sent to the hiring team.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Fetch existing messages
   const { data: messages } = await supabase
     .from("messages")

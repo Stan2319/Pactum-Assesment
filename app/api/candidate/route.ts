@@ -6,8 +6,8 @@ export async function POST(req: NextRequest) {
   try {
     const { assessmentId, name, email } = await req.json()
 
-    if (!assessmentId || !name?.trim() || !email?.trim()) {
-      return NextResponse.json({ error: "Name, email, and assessment are required" }, { status: 400 })
+    if (!assessmentId || !email?.trim()) {
+      return NextResponse.json({ error: "Email and assessment are required" }, { status: 400 })
     }
 
     const supabase = await createServiceClient()
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       .insert({
         company_id: assessment.company_id,
         assessment_id: assessmentId,
-        name: name.trim(),
+        name: name?.trim() ?? null,
         email: email.trim(),
         invite_token: token,
       })

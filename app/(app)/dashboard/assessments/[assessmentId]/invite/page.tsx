@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { DashboardShell } from "@/components/app/DashboardShell"
 import { InvitePanel } from "@/components/app/InvitePanel"
 
@@ -30,23 +31,35 @@ export default async function InvitePage({ params }: Props) {
   if (!assessment) redirect("/dashboard")
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  const openLink = `${siteUrl}/a/${assessmentId}`
+
+  const { data: existingCandidates } = await supabase
+    .from("candidates")
+    .select("id, name, email, invite_token, created_at")
+    .eq("assessment_id", assessmentId)
+    .order("created_at", { ascending: false })
 
   return (
     <DashboardShell companyName={company?.name ?? "Your Company"} userEmail={user.email ?? ""}>
-      <div className="max-w-lg">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-ink)" }}>
-            Assessment ready
-          </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--color-slate)" }}>
-            Share this link with every candidate you want to assess for this role.
-          </p>
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-ink)" }}>
+              Invite candidates
+            </h1>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-slate)" }}>
+              Generate a unique link for each candidate. Each link expires once the assessment is completed.
+            </p>
+          </div>
+          <Link href="/dashboard" className="btn-pill-dark text-sm shrink-0 ml-6">
+            ← Dashboard
+          </Link>
         </div>
         <InvitePanel
           assessmentTitle={assessment.title}
-          inviteUrl={openLink}
           assessmentId={assessmentId}
+          siteUrl={siteUrl}
+          initialCandidates={existingCandidates ?? []}
         />
       </div>
     </DashboardShell>
