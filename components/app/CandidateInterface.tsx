@@ -126,14 +126,15 @@ export function CandidateInterface({
   // Persist document state
   useDocumentPersistence(session.id, documentState)
 
-  // Timer
+  // Timer — stops when session is completed
   useEffect(() => {
+    if (sessionStatus === "completed") return
     const start = Date.now() - elapsedSeconds * 1000
     const interval = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - start) / 1000))
     }, 1000)
     return () => clearInterval(interval)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sessionStatus]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll chat only when user is near the bottom
   useEffect(() => {
