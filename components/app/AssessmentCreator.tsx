@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import {
-  ChevronLeft, ChevronRight, Search, Code2, FileText,
+  ChevronLeft, ChevronRight, ChevronDown, Search, Code2, FileText,
   LayoutTemplate, PenLine, Check,
 } from "lucide-react"
 import type { AssessmentRound, WorkspaceType } from "@/lib/types"
@@ -3219,9 +3219,11 @@ export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
                         template={tpl}
                         selected={previewKey === tpl.key}
                         last={i === filteredTemplates.length - 1}
+                        isCoding={wizardStep === "search-coding"}
                         onClick={() =>
                           setPreviewKey(previewKey === tpl.key ? null : tpl.key)
                         }
+                        onUse={() => finishWithTemplate(tpl.key)}
                       />
                     ))
                   ) : (
@@ -3234,28 +3236,6 @@ export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
                   )}
                 </div>
 
-                {/* Preview panel */}
-                <AnimatePresence>
-                  {previewTemplate && (
-                    <motion.div
-                      key={previewTemplate.key}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } }}
-                      exit={{ opacity: 0, y: 4, transition: { duration: 0.15, ease: "easeIn" } }}
-                      className="mt-3 rounded-2xl p-5"
-                      style={{
-                        background: "var(--color-surface)",
-                        border: "1px solid var(--color-border)",
-                      }}
-                    >
-                      <TemplatePreviewPanel
-                        template={previewTemplate}
-                        isCoding={wizardStep === "search-coding"}
-                        onUse={() => finishWithTemplate(previewTemplate.key)}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             )}
 
@@ -3601,58 +3581,126 @@ function TemplateResultRow({
   template,
   selected,
   last,
+  isCoding,
   onClick,
+  onUse,
 }: {
   template: TemplateConfig
   selected: boolean
   last: boolean
+  isCoding: boolean
   onClick: () => void
+  onUse: () => void
 }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="w-full text-left px-4 py-3 flex items-start gap-3 transition-colors"
-      style={{
-        background: selected ? "#f0f6ff" : hovered ? "var(--color-canvas)" : "transparent",
-        borderBottom: last ? "none" : "1px solid var(--color-border)",
-        cursor: "pointer",
-      }}
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium" style={{ color: "var(--color-ink-near)" }}>
-            {template.label}
-          </span>
-          <span
-            className="text-xs px-1.5 py-0.5 rounded-full"
-            style={{
-              background: template.workspace === "code" ? "#eff6ff" : "var(--color-canvas)",
-              color: template.workspace === "code" ? "var(--color-cobalt)" : "var(--color-slate)",
-              border: template.workspace === "code" ? "none" : "1px solid var(--color-border)",
-            }}
-          >
-            {WORKSPACE_LABELS[template.workspace]}
-          </span>
-        </div>
-        <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-          {template.tags.slice(0, 5).map(tag => (
-            <span
-              key={tag}
-              className="text-xs px-1.5 py-0.5 rounded"
-              style={{ background: "var(--color-canvas)", color: "var(--color-slate)" }}
-            >
-              {tag}
+    <div style={{ borderBottom: last && !selected ? "none" : selected ? "none" : "1px solid var(--color-border)" }}>
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="w-full text-left px-4 py-3 flex items-center gap-3 transition-colors"
+        style={{
+          background: selected ? "#f0f6ff" : hovered ? "var(--color-canvas)" : "transparent",
+          cursor: "pointer",
+          borderBottom: selected ? "1px solid #dbeafe" : "none",
+        }}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium" style={{ color: "var(--color-ink-near)" }}>
+              {template.label}
             </span>
-          ))}
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-full"
+              style={{
+                background: template.workspace === "code" ? "#eff6ff" : "var(--color-canvas)",
+                color: template.workspace === "code" ? "var(--color-cobalt)" : "var(--color-slate)",
+                border: template.workspace === "code" ? "none" : "1px solid var(--color-border)",
+              }}
+            >
+              {WORKSPACE_LABELS[template.workspace]}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+            {template.tags.slice(0, 5).map(tag => (
+              <span
+                key={tag}
+                className="text-xs px-1.5 py-0.5 rounded"
+                style={{ background: selected ? "#dbeafe" : "var(--color-canvas)", color: "var(--color-slate)" }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
-      {selected && (
-        <Check size={14} style={{ color: "var(--color-cobalt)", flexShrink: 0, marginTop: 2 }} />
-      )}
-    </button>
+        <motion.div
+          animate={{ rotate: selected ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          style={{ flexShrink: 0 }}
+        >
+          <ChevronDown size={14} style={{ color: selected ? "var(--color-cobalt)" : "var(--color-slate)" }} />
+        </motion.div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {selected && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: "easeOut" } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: "easeIn" } }}
+            style={{ overflow: "hidden", borderBottom: last ? "none" : "1px solid var(--color-border)" }}
+          >
+            <div className="px-4 pb-4 pt-3" style={{ background: "#f0f6ff" }}>
+              {/* Description */}
+              <p
+                className="text-xs leading-relaxed mb-3"
+                style={{
+                  color: "var(--color-slate)",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {template.description}
+              </p>
+
+              {/* Rounds */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-slate)" }}>
+                  {isCoding ? "Steps" : "Rounds"}
+                </p>
+                <div className="space-y-1.5">
+                  {template.rounds.map(r => (
+                    <div key={r.round} className="flex items-center gap-2.5">
+                      <span
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                        style={{
+                          background: "#dbeafe",
+                          color: "var(--color-cobalt)",
+                          border: "1px solid #bfdbfe",
+                        }}
+                      >
+                        {r.round}
+                      </span>
+                      <span className="text-xs" style={{ color: "var(--color-ink-near)" }}>
+                        {r.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA */}
+              <button onClick={onUse} className="btn-pill-dark text-sm w-full py-2.5">
+                Use this template →
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
