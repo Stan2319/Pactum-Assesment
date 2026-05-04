@@ -52,7 +52,7 @@ const tiers: PricingTier[] = [
     period: "",
     description: "For large orgs that need scale, compliance, and control.",
     features: [
-      "250+ or unlimited assessments",
+      "Unlimited assessments",
       "White-label candidate interface",
       "Dedicated sandbox infrastructure",
       "Golden Path Benchmarking",
@@ -60,7 +60,7 @@ const tiers: PricingTier[] = [
       "Dedicated success manager",
     ],
     highlight: false,
-    cta: "Talk to us",
+    cta: "Coming soon",
   },
 ]
 
@@ -233,9 +233,9 @@ export const Pricing: React.FC = () => {
                 </p>
 
                 <motion.button
-                  onClick={handleCTA}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
+                  onClick={tier.name === "Enterprise" ? undefined : handleCTA}
+                  whileHover={tier.name === "Enterprise" ? {} : { scale: 1.03 }}
+                  whileTap={tier.name === "Enterprise" ? {} : { scale: 0.97 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   style={{
                     width: "100%",
@@ -243,13 +243,18 @@ export const Pricing: React.FC = () => {
                     borderRadius: 9999,
                     fontSize: "0.9375rem",
                     fontWeight: 600,
-                    cursor: "pointer",
+                    cursor: tier.name === "Enterprise" ? "default" : "pointer",
                     border: tier.highlight
                       ? "none"
                       : "1px solid var(--color-border-input)",
                     background: tier.highlight ? "#fff" : "transparent",
-                    color: tier.highlight ? "var(--color-ink)" : "var(--color-ink-near)",
+                    color: tier.name === "Enterprise"
+                      ? "var(--color-silver)"
+                      : tier.highlight
+                        ? "var(--color-ink)"
+                        : "var(--color-ink-near)",
                     marginBottom: 28,
+                    opacity: tier.name === "Enterprise" ? 0.6 : 1,
                   }}
                 >
                   {tier.cta}
