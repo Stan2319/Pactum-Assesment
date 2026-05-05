@@ -39,7 +39,6 @@ const tiers: PricingTier[] = [
     features: [
       "200 assessments/month",
       "Custom rubrics & scoring weights",
-      "ATS integrations (Greenhouse, Lever)",
       "Full prompt-by-prompt replay",
       "Priority support",
     ],
