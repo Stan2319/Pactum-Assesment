@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 type View = "signin" | "forgot" | "forgot-sent"
 
@@ -34,8 +34,10 @@ function Input({ type, value, onChange, placeholder }: {
   )
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteError = searchParams.get("error") === "invite_expired"
   const [view, setView] = useState<View>("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -95,6 +97,12 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {inviteError && (
+          <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Your invite link has expired or already been used. Sign in below or request a new invite.
+          </div>
+        )}
+
         <div
           className="rounded-2xl p-8"
           style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-whisper)" }}
@@ -141,6 +149,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }
 

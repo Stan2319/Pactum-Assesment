@@ -2,6 +2,7 @@
 
 import { motion, useScroll } from "framer-motion"
 import { useEffect, useState } from "react"
+import Link from "next/link"
 
 export const Nav: React.FC = () => {
   const [scrolled, setScrolled] = useState(false)
@@ -10,10 +11,6 @@ export const Nav: React.FC = () => {
   useEffect(() => {
     return scrollY.on("change", (y) => setScrolled(y > 20))
   }, [scrollY])
-
-  const handleCTA = () => {
-    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
-  }
 
   return (
     <motion.header
@@ -95,16 +92,19 @@ export const Nav: React.FC = () => {
         </nav>
 
         {/* CTA */}
-        <motion.button
-          onClick={handleCTA}
+        <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          className="btn-pill-dark"
-          style={{ padding: "9px 22px", fontSize: "0.875rem" }}
         >
-          Join waitlist
-        </motion.button>
+          <Link
+            href="/login"
+            className="btn-pill-dark"
+            style={{ padding: "9px 22px", fontSize: "0.875rem", display: "inline-block", textDecoration: "none" }}
+          >
+            Log in
+          </Link>
+        </motion.div>
       </div>
     </motion.header>
   )
