@@ -6,7 +6,9 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code")
   const tokenHash = searchParams.get("token_hash")
   const type = searchParams.get("type") as "invite" | "magiclink" | "recovery" | "signup" | null
-  const next = searchParams.get("next") ?? "/dashboard"
+  // Only allow relative paths to prevent open redirect attacks
+  const rawNext = searchParams.get("next") ?? ""
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard"
 
   const supabase = await createClient()
 
