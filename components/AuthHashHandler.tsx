@@ -19,6 +19,7 @@ export function AuthHashHandler() {
     const params = new URLSearchParams(hash.slice(1))
     const accessToken = params.get("access_token")
     const refreshToken = params.get("refresh_token")
+    const type = params.get("type")
 
     if (!accessToken || !refreshToken) return
 
@@ -27,7 +28,8 @@ export function AuthHashHandler() {
       // Clear the hash so tokens don't linger in the URL
       window.history.replaceState(null, "", window.location.pathname)
       if (!error) {
-        router.push("/dashboard")
+        // Invite users haven't set a password yet — send them to do that first
+        router.push(type === "invite" ? "/set-password" : "/dashboard")
       } else {
         router.push("/login?error=invite_expired")
       }
