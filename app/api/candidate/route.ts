@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServiceClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { randomUUID } from "crypto"
 
 export async function POST(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email and assessment are required" }, { status: 400 })
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createAdminClient()
 
     const { data: assessment } = await supabase
       .from("assessments")

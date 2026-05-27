@@ -188,6 +188,25 @@ body {
   padding: 0;
 }
 
+/* ─── Code output viewer scrollbar ──────────────────────────── */
+.code-output-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.code-output-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.code-output-scroll::-webkit-scrollbar-thumb {
+  background: #3c3c3c;
+  border-radius: 4px;
+}
+.code-output-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+.code-output-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* ─── Tiptap report editor ───────────────────────────────────── */
 .prose-report .tiptap {
   min-height: 100%;

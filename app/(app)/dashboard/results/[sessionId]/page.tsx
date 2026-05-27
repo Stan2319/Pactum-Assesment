@@ -3,6 +3,8 @@ import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { DashboardShell } from "@/components/app/DashboardShell"
 import { RoundReplay } from "@/components/app/RoundReplay"
+import { CodeOutputViewer } from "@/components/app/CodeOutputViewer"
+import { RegradeButton } from "@/components/app/RegradeButton"
 import type { Message, Score, Assessment, Candidate, DocumentStateReport, DocumentStateEmail, DocumentStateSpreadsheet, DocumentStateDeck } from "@/lib/types"
 
 interface Props {
@@ -79,6 +81,12 @@ export default async function ResultsPage({ params }: Props) {
         </div>
 
         {/* Score card */}
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
+            Score
+          </h2>
+          <RegradeButton sessionId={sessionId} />
+        </div>
         {score ? (
           <div
             className="rounded-2xl overflow-hidden"
@@ -325,26 +333,7 @@ function FinalOutput({ workspaceType, docState }: { workspaceType: string; docSt
     const files = state.files ?? (state.code ? { "main": state.code } : {})
     const entries = Object.entries(files)
     if (!entries.length) return shell(<p className="p-6 text-sm" style={{ color: "var(--color-silver)" }}>No files.</p>)
-    return (
-      <div className="space-y-3">
-        {entries.map(([filename, content]) => (
-          <div key={filename} className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
-            <div
-              className="px-4 py-2.5 text-xs font-semibold"
-              style={{ background: "var(--color-canvas)", borderBottom: "1px solid var(--color-border)", color: "var(--color-slate)", fontFamily: "monospace" }}
-            >
-              {filename}
-            </div>
-            <pre
-              className="p-4 text-xs overflow-x-auto"
-              style={{ color: "var(--color-ink-near)", fontFamily: "monospace", lineHeight: 1.6, margin: 0, background: "var(--color-surface)" }}
-            >
-              {content}
-            </pre>
-          </div>
-        ))}
-      </div>
-    )
+    return <CodeOutputViewer files={Object.fromEntries(entries)} language={state.language} />
   }
 
   return null

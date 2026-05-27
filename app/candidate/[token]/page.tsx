@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
+import { cookies } from "next/headers"
 import { CandidateInterface } from "@/components/app/CandidateInterface"
 
 interface Props {
@@ -46,6 +47,18 @@ export default async function CandidatePage({ params }: Props) {
   }
 
   if (!session) notFound()
+
+  // Set an httpOnly cookie binding this browser to the session.
+  // API routes verify this cookie matches the sessionId in the request body,
+  // preventing unauthenticated callers from targeting arbitrary sessions.
+  const cookieStore = await cookies()
+  cookieStore.set("pactum_cand_session", session.id, {
+    httpOnly: true,
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 24, // 24 hours
+    secure: process.env.NODE_ENV === "production",
+  })
 
   // Block re-entry once completed
   if (session.status === "completed") {

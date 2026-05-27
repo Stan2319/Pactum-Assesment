@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/app/DashboardShell"
 import { RecentCandidates } from "@/components/app/RecentCandidates"
 import { DeleteAssessmentButton } from "@/components/app/DeleteAssessmentButton"
 import type { Assessment } from "@/lib/types"
+import { Pencil } from "lucide-react"
 
 const WORKSPACE_LABELS: Record<string, string> = {
   report: "Doc",
@@ -269,7 +270,17 @@ function AssessmentCard({ assessment, sessionCount }: { assessment: Assessment; 
             })}
           </span>
         </div>
-        <DeleteAssessmentButton assessmentId={assessment.id} />
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/dashboard/assessments/${assessment.id}/edit`}
+            className="flex items-center gap-1 text-xs transition-colors hover:text-[var(--color-ink)]"
+            style={{ color: "var(--color-silver)" }}
+          >
+            <Pencil size={12} />
+            Edit
+          </Link>
+          <DeleteAssessmentButton assessmentId={assessment.id} />
+        </div>
       </div>
     </div>
   )

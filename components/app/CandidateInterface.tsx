@@ -84,7 +84,6 @@ export function CandidateInterface({
   })
   const [suggestedPatch, setSuggestedPatch] = useState<DocPatch | null>(null)
   const [pendingPatch, setPendingPatch] = useState<DocPatch | null>(null)
-  const [generatingPatch, setGeneratingPatch] = useState(false)
 
   // Task context drawer
   const [contextDrawerOpen, setContextDrawerOpen] = useState(true)
@@ -210,25 +209,41 @@ export function CandidateInterface({
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let fullContent = ""
+      const PATCH_SENTINEL = "\n<|PATCH|>"
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         fullContent += decoder.decode(value, { stream: true })
-        const captured = fullContent
+
+        // Strip patch sentinel from displayed content mid-stream
+        const sentinelIdx = fullContent.indexOf(PATCH_SENTINEL)
+        const displayContent = sentinelIdx !== -1 ? fullContent.slice(0, sentinelIdx) : fullContent
         setMessages((prev) => {
           const msgs = [...prev]
-          msgs[msgs.length - 1] = { role: "assistant", content: captured }
+          msgs[msgs.length - 1] = { role: "assistant", content: displayContent }
           return msgs
         })
       }
 
       setIsStreaming(false)
 
-      if (fullContent) {
-        await saveMessage(currentRound, "assistant", fullContent)
-        // Auto-generate doc patch in background, candidate still accepts/dismisses
-        handleApplyToDoc(fullContent)
+      // Extract patch from sentinel if present
+      const sentinelIdx = fullContent.indexOf(PATCH_SENTINEL)
+      const chatContent = sentinelIdx !== -1 ? fullContent.slice(0, sentinelIdx) : fullContent
+      const patchJson = sentinelIdx !== -1 ? fullContent.slice(sentinelIdx + PATCH_SENTINEL.length).trim() : null
+
+      if (chatContent) {
+        await saveMessage(currentRound, "assistant", chatContent)
+      }
+
+      if (patchJson) {
+        try {
+          const patch = JSON.parse(patchJson)
+          if (patch && !patch.skip) setSuggestedPatch(patch)
+        } catch {
+          // Malformed patch — ignore
+        }
       }
     } catch (err) {
       console.error("Send error:", err)
@@ -238,29 +253,7 @@ export function CandidateInterface({
     }
   }
 
-  async function handleApplyToDoc(messageContent: string) {
-    setGeneratingPatch(true)
-    try {
-      const res = await fetch("/api/doc-patch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: session.id,
-          messageContent,
-          workspaceType: assessment.workspace_type,
-          currentDocumentState: documentState,
-        }),
-      })
-      const data = await res.json()
-      if (data.patch) setSuggestedPatch(data.patch)
-    } catch (err) {
-      console.error("Doc patch error:", err)
-    } finally {
-      setGeneratingPatch(false)
-    }
-  }
-
-  function handleAcceptPatch() {
+function handleAcceptPatch() {
     if (suggestedPatch && "path" in suggestedPatch) {
       const filePath = (suggestedPatch as import("@/lib/types").DocPatchCode).path
       setMessages((prev) => {
@@ -508,14 +501,14 @@ export function CandidateInterface({
         {confirming && (
           <div
             className="px-4 py-3 shrink-0 border-t"
-            style={{ background: "#fffbeb", borderColor: "#fcd34d" }}
+            style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
           >
-            <p className="text-xs font-semibold mb-1" style={{ color: "#92400e" }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: "var(--color-ink)" }}>
               {currentRound < totalRounds
                 ? `Submit Round ${currentRound} and move to Round ${currentRound + 1}?`
                 : "Submit your assessment?"}
             </p>
-            <p className="text-xs mb-2.5" style={{ color: "#b45309" }}>
+            <p className="text-xs mb-2.5" style={{ color: "var(--color-slate)" }}>
               {currentRound < totalRounds
                 ? "You won't be able to go back. Make sure your work reflects your best effort."
                 : "This ends the assessment. Your full session will be scored."}
@@ -532,7 +525,7 @@ export function CandidateInterface({
               <button
                 onClick={() => setConfirming(false)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ background: "transparent", color: "#92400e", border: "1px solid #fcd34d", cursor: "pointer" }}
+                style={{ background: "transparent", color: "var(--color-slate)", border: "1px solid var(--color-border)", cursor: "pointer" }}
               >
                 Go back
               </button>
@@ -608,7 +601,7 @@ export function CandidateInterface({
         documentState={documentState}
         suggestedPatch={suggestedPatch}
         pendingPatch={pendingPatch}
-        isGeneratingPatch={generatingPatch}
+        isGeneratingPatch={false}
         onAcceptPatch={handleAcceptPatch}
         onDismissPatch={handleDismissPatch}
         onPatchApplied={handlePatchApplied}
@@ -641,8 +634,8 @@ function ChatBubble({
         <div
           className={`px-3 py-2.5 rounded-2xl text-sm leading-relaxed ${isUser ? "rounded-tr-sm" : "rounded-tl-sm"}`}
           style={{
-            background: isUser ? "var(--color-ink)" : "var(--color-surface)",
-            color: isUser ? "var(--color-canvas)" : "var(--color-ink-near)",
+            background: isUser ? "var(--color-cobalt)" : "var(--color-surface)",
+            color: isUser ? "#fff" : "var(--color-ink-near)",
             border: isUser ? "none" : "1px solid var(--color-border)",
           }}
         >
@@ -666,7 +659,7 @@ function ChatBubble({
           <div className="mt-1.5 flex items-center gap-1.5">
             <span
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono"
-              style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
+              style={{ background: "var(--color-canvas)", color: "#4ade80", border: "1px solid var(--color-border)" }}
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>

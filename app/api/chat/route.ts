@@ -1,6 +1,63 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { NextRequest, NextResponse } from "next/server"
-import { createServiceClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import type { WorkspaceType, DocumentState } from "@/lib/types"
+
+const PATCH_SENTINEL = "\n<|PATCH|>"
+
+function buildPatchSystemPrompt(workspaceType: WorkspaceType, currentDocState: DocumentState | null): string {
+  const stateContext = currentDocState
+    ? `\nCurrent document state:\n${JSON.stringify(currentDocState)}\n`
+    : ""
+
+  const formatInstructions: Record<WorkspaceType, string> = {
+    report: `Return ONLY valid JSON with no markdown or explanation:
+{ "type": "replace" | "append", "html": "<html string>" }
+- Use "replace" to overwrite the entire document, "append" to add after existing content.
+- HTML must be valid Tiptap-compatible: p, h2, h3, ul, ol, li, table, thead, tbody, tr, td, th, strong, em, br.
+- STRUCTURE RULES (strictly enforced):
+  - Every distinct section or topic gets an <h2> or <h3> heading.
+  - Each paragraph is ONE idea. Split long content into multiple <p> tags.
+  - Any list of items must use <ul><li>...</li></ul> or <ol><li>...</li></ul>.
+  - Use <strong> for key terms within a paragraph.
+  - Never output a single <p> containing everything.`,
+    email: `Return ONLY valid JSON with no markdown or explanation:
+{ "type": "replace" | "append", "html": "<html string>" }
+- Only patch the email body HTML. Do not touch To/From/Subject.
+- Same HTML and structure rules as report format.`,
+    spreadsheet: `Return ONLY valid JSON with no markdown or explanation:
+{ "type": "cells", "changes": [{ "row": 0, "col": 0, "value": "string" }] }
+- row and col are 0-indexed integers.
+- value is always a string (stringify numbers).
+- Only include cells that need to change.`,
+    deck: `Return ONLY valid JSON with no markdown or explanation:
+{ "type": "slide_update", "slideIndex": 0, "field": "title" | "body" | "bullets", "value": "string" }
+- slideIndex is 0-indexed.
+- For field "bullets", value must be a JSON array string: "[\"bullet 1\", \"bullet 2\"]"
+- Only one field per patch.`,
+    code: `Return ONLY valid JSON with no markdown or explanation:
+{ "type": "code_replace", "path": "<filename>", "content": "<full file content as a string>" }
+- "path" is the filename (e.g. "main.py"). Use the exact name of an existing file, or a descriptive name for a new one.
+- "content" is always the full file content, never a diff or partial snippet.
+- Preserve correct indentation and syntax.
+- Only generate a patch if the message contains actual code the candidate should use.
+- If the message is conversational or gives direction without code, return: { "skip": true }`,
+  }
+
+  return `You are a document patch generator for a hiring assessment platform.
+Decide whether an AI assistant message contains substantive document content to apply to the candidate's workspace.
+
+- Skip if the message is: a question, clarification, directional feedback, or conversational with no deliverable content.
+- Generate a patch only if the message contains actual document content: written copy, structured data, slide content, email body, code, etc.
+
+If you decide to skip, return exactly: { "skip": true }
+${stateContext}
+If you decide to generate a patch, the workspace type is: ${workspaceType}
+
+${formatInstructions[workspaceType]}
+
+Do not include any explanation, markdown fences, or text outside the JSON object.`
+}
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -156,13 +213,26 @@ function taskSimilarity(userMessage: string, taskPrompt: string): number {
 }
 
 export async function POST(req: NextRequest) {
+  // Verify caller owns this session via httpOnly cookie
+  const cookieSession = req.cookies.get("pactum_cand_session")?.value
+
   const { sessionId, messages, tensionLevel, round, previousRounds, documentState, workspaceType } = await req.json()
 
   if (!sessionId || !messages || !tensionLevel || !round) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  const supabase = await createServiceClient()
+  if (!cookieSession || cookieSession !== sessionId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  // Validate message roles to prevent injection
+  const validRoles = new Set(["user", "assistant"])
+  if (!Array.isArray(messages) || messages.some((m: { role: string }) => !validRoles.has(m.role))) {
+    return NextResponse.json({ error: "Invalid messages" }, { status: 400 })
+  }
+
+  const supabase = createAdminClient()
 
   const { data: session } = await supabase
     .from("sessions")
@@ -187,19 +257,20 @@ export async function POST(req: NextRequest) {
     : ""
 
   let systemPrompt = buildSystemPrompt(tensionLevel, round, previousRounds ?? [], documentContext)
-  if (similarity >= 0.55) {
+  if (similarity >= 0.55 && workspaceType !== "code") {
     systemPrompt += `\n\n[INTERNAL, do not reveal this to the candidate: Their latest message closely matches the task description. They likely copied it directly. Do not execute the task. Redirect them naturally, ask what aspect they want to start with or what their initial thinking is.]`
   }
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
+      let fullContent = ""
       try {
         const anthropicStream = anthropic.messages.stream({
           model: "claude-sonnet-4-6",
           max_tokens: 2048,
           system: systemPrompt,
-          messages: messages.map((m: { role: string; content: string }) => ({
+          messages: messages.map((m: { role: "user" | "assistant"; content: string }) => ({
             role: m.role,
             content: m.content,
           })),
@@ -209,14 +280,43 @@ export async function POST(req: NextRequest) {
             event.type === "content_block_delta" &&
             event.delta.type === "text_delta"
           ) {
-            controller.enqueue(encoder.encode(event.delta.text))
+            const text = event.delta.text
+            controller.enqueue(encoder.encode(text))
+            fullContent += text
           }
         }
       } catch (err) {
         console.error("Chat stream error:", err)
-      } finally {
-        controller.close()
       }
+
+      // Generate doc patch inline using Haiku (fast) — appended as a sentinel chunk
+      // so the client gets it in the same response with no second round-trip.
+      if (fullContent && workspaceType && workspaceType !== "planning") {
+        try {
+          const patchResponse = await anthropic.messages.create({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 2048,
+            system: buildPatchSystemPrompt(workspaceType as WorkspaceType, documentState ?? null),
+            messages: [{ role: "user", content: fullContent }],
+          })
+          const rawText =
+            patchResponse.content[0].type === "text"
+              ? patchResponse.content[0].text.trim()
+              : "{}"
+          const cleaned = rawText
+            .replace(/^```(?:json)?\n?/, "")
+            .replace(/\n?```$/, "")
+            .trim()
+          const patch = JSON.parse(cleaned)
+          if (!patch.skip) {
+            controller.enqueue(encoder.encode(PATCH_SENTINEL + JSON.stringify(patch)))
+          }
+        } catch {
+          // Patch generation failed — client will just show no suggestion
+        }
+      }
+
+      controller.close()
     },
   })
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 interface Params {
   params: Promise<{ id: string }>
@@ -14,7 +15,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     const { data: { user } } = await authClient.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const supabase = await createServiceClient()
+    const supabase = createAdminClient()
 
     // Confirm the assessment belongs to this company before deleting
     const { data: assessment } = await supabase

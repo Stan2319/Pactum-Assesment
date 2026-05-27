@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function DELETE() {
   try {
@@ -7,7 +8,7 @@ export async function DELETE() {
     const { data: { user } } = await authClient.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const supabase = await createServiceClient()
+    const supabase = createAdminClient()
 
     // Delete scores first — missing CASCADE FKs would block the cascade chain
     const { error: scoresError } = await supabase

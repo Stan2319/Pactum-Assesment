@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Search, Code2, FileText,
   LayoutTemplate, PenLine, Check,
 } from "lucide-react"
-import type { AssessmentRound, WorkspaceType } from "@/lib/types"
+import type { Assessment, AssessmentRound, WorkspaceType } from "@/lib/types"
 
 // ── Template round data ────────────────────────────────────────────
 
@@ -160,7 +160,7 @@ const PYTHON_CODING_TEMPLATE: AssessmentRound[] = [
     round: 2,
     title: "Implement the solution",
     prompt:
-      "Using Claude Code in the terminal below, implement a Python function that reads a CSV file of sales transactions (columns: date, product_id, quantity, unit_price), calculates total revenue per product, and returns the top 5 products by revenue as a sorted list of (product_id, total_revenue) tuples. The function signature should be: get_top_products(filepath: str) -> list[tuple[str, float]]",
+      "Implement a Python function that reads a CSV file of sales transactions (columns: date, product_id, quantity, unit_price), calculates total revenue per product, and returns the top 5 products by revenue as a sorted list of (product_id, total_revenue) tuples. The function signature should be: get_top_products(filepath: str) -> list[tuple[str, float]]",
     success_criteria:
       "A working Python function that correctly reads the CSV, calculates revenue (quantity × unit_price), aggregates by product_id, and returns the top 5 sorted by revenue descending. Edge cases handled: missing values, zero quantities, duplicate product IDs.",
   },
@@ -168,7 +168,7 @@ const PYTHON_CODING_TEMPLATE: AssessmentRound[] = [
     round: 3,
     title: "Handle scale",
     prompt:
-      "The CSV file could be 10GB. Refactor your solution to handle files that don't fit in memory. Explain your approach in Claude Code before implementing.",
+      "The CSV file could be 10GB. Refactor your solution to handle files that don't fit in memory. Explain your approach before implementing.",
     success_criteria:
       "Solution uses chunked reading (e.g. pandas chunksize or csv.reader with a running dict). The candidate explains the memory tradeoff before coding. Final solution produces the same correct output for large files without loading the entire file at once.",
   },
@@ -187,7 +187,7 @@ const JS_CODING_TEMPLATE: AssessmentRound[] = [
     round: 2,
     title: "Implement the endpoint",
     prompt:
-      "Using Claude Code in the terminal below, implement a Node.js Express endpoint: POST /api/notifications/send. It should accept a JSON body with { userId: string, message: string, channel: 'email' | 'sms' | 'push' }, validate the input, look up the user's preferences from an in-memory store (you define the shape), and return { success: boolean, queued: boolean, reason?: string }. Don't implement real sending, stub the delivery logic.",
+      "Implement a Node.js Express endpoint: POST /api/notifications/send. It should accept a JSON body with { userId: string, message: string, channel: 'email' | 'sms' | 'push' }, validate the input, look up the user's preferences from an in-memory store (you define the shape), and return { success: boolean, queued: boolean, reason?: string }. Don't implement real sending, stub the delivery logic.",
     success_criteria:
       "A working Express endpoint that validates required fields and types, references a user preferences store, returns the correct response shape, and handles invalid input with appropriate status codes (400 for bad input, 404 for unknown user). Delivery logic is stubbed but clearly indicated.",
   },
@@ -195,9 +195,9 @@ const JS_CODING_TEMPLATE: AssessmentRound[] = [
     round: 3,
     title: "Add rate limiting",
     prompt:
-      "The endpoint is being abused, some users are sending hundreds of notifications per minute. Add per-user rate limiting: max 10 notifications per minute per userId. Explain your design to Claude Code before implementing. It should work in-process (no Redis) and handle the window correctly.",
+      "The endpoint is being abused, some users are sending hundreds of notifications per minute. Add per-user rate limiting: max 10 notifications per minute per userId. Explain your design before implementing. It should work in-process (no Redis) and handle the window correctly.",
     success_criteria:
-      "Rate limiting implemented in-process using a sliding window or token bucket approach. The 429 response includes a retry-after value. The design explanation in the terminal demonstrates understanding of the tradeoff (in-process vs distributed). Window resets correctly after 60 seconds.",
+      "Rate limiting implemented in-process using a sliding window or token bucket approach. The 429 response includes a retry-after value. The design explanation demonstrates understanding of the tradeoff (in-process vs distributed). Window resets correctly after 60 seconds.",
   },
 ]
 
@@ -792,7 +792,7 @@ const TEMPLATES: TemplateConfig[] = [
     role: "Data Engineer / Backend Engineer",
     tags: ["python", "data", "csv", "pandas", "backend", "pipeline", "beginner"],
     description:
-      "You are a data engineering candidate being assessed on your ability to write clean, correct Python using Claude Code. You will work in a real Linux sandbox with Python and common data libraries (pandas, csv) available. Use Claude Code in the terminal to plan, implement, and iterate on your solution. Edit your code in the editor on the right.",
+      "You are a data engineering candidate being assessed on your ability to write clean, correct Python. Use the AI assistant to plan, implement, and iterate on your solution. Edit your code in the editor on the right.",
     rounds: PYTHON_CODING_TEMPLATE,
   },
   {
@@ -804,7 +804,7 @@ const TEMPLATES: TemplateConfig[] = [
     role: "Backend Engineer / Full-Stack Engineer",
     tags: ["javascript", "node", "express", "api", "backend", "rate-limiting", "rest"],
     description:
-      "You are a backend engineering candidate being assessed on your ability to design and implement a Node.js API feature using Claude Code. You will work in a real Linux sandbox with Node.js and npm available. Use Claude Code in the terminal to plan, implement, and iterate. Edit your code in the editor on the right.",
+      "You are a backend engineering candidate being assessed on your ability to design and implement a Node.js API feature. Use the AI assistant to plan, implement, and iterate on your solution. Edit your code in the editor on the right.",
     rounds: JS_CODING_TEMPLATE,
   },
 
@@ -2937,30 +2937,35 @@ const WORKSPACE_LABELS: Record<WorkspaceType, string> = {
 
 interface AssessmentCreatorProps {
   companyId: string
+  initialData?: Assessment
+  assessmentId?: string
 }
 
-export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
+export function AssessmentCreator({ companyId, initialData, assessmentId }: AssessmentCreatorProps) {
   const router = useRouter()
   const supabase = createClient()
+  const isEditing = !!assessmentId && !!initialData
 
-  // Form state
-  const [title, setTitle] = useState("")
-  const [role, setRole] = useState("")
-  const [description, setDescription] = useState("")
-  const [tensionLevel, setTensionLevel] = useState<"junior" | "senior">("junior")
+  // Form state — seeded from initialData when editing
+  const [title, setTitle] = useState(initialData?.title ?? "")
+  const [role, setRole] = useState(initialData?.role ?? "")
+  const [description, setDescription] = useState(initialData?.description ?? "")
+  const [tensionLevel, setTensionLevel] = useState<"junior" | "senior">(initialData?.tension_level ?? "junior")
   const nextId = useRef(2)
-  const [rounds, setRounds] = useState<(AssessmentRound & { _id: number })[]>([
-    { _id: 1, round: 1, title: "", prompt: "", success_criteria: "" },
-  ])
+  const [rounds, setRounds] = useState<(AssessmentRound & { _id: number })[]>(
+    initialData
+      ? initialData.rounds.map((r, i) => ({ ...r, _id: i + 1 }))
+      : [{ _id: 1, round: 1, title: "", prompt: "", success_criteria: "" }]
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [activeTemplate, setActiveTemplate] = useState<TemplateKey | null>(null)
-  const [workspaceType, setWorkspaceType] = useState<WorkspaceType>("report")
-  const [language, setLanguage] = useState<"python" | "javascript">("python")
-  const [starterFiles, setStarterFiles] = useState<Record<string, string> | undefined>(undefined)
+  const [workspaceType, setWorkspaceType] = useState<WorkspaceType>(initialData?.workspace_type ?? "report")
+  const [language, setLanguage] = useState<"python" | "javascript">(initialData?.language ?? "python")
+  const [starterFiles, setStarterFiles] = useState<Record<string, string> | undefined>(initialData?.starter_files)
 
-  // Wizard state
-  const [wizardDone, setWizardDone] = useState(false)
+  // Wizard state — skip wizard when editing
+  const [wizardDone, setWizardDone] = useState(isEditing)
   const [wizardStep, setWizardStep] = useState<WizardStep>("start")
   const [wizardDir, setWizardDir] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
@@ -3066,28 +3071,44 @@ export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
     }
     setSaving(true)
     setError("")
-    const { data, error: insertError } = await supabase
-      .from("assessments")
-      .insert({
-        company_id: companyId,
-        title,
-        role,
-        description,
-        rounds: rounds.map(({ _id, ...r }) => r),
-        workspace_type: workspaceType,
-        ...(workspaceType === "code" ? { language } : {}),
-        ...(starterFiles ? { starter_files: starterFiles } : {}),
-        tension_level: tensionLevel,
-        is_active: true,
-      })
-      .select()
-      .single()
-    if (insertError) {
-      setError(insertError.message)
-      setSaving(false)
-      return
+
+    const payload = {
+      title,
+      role,
+      description,
+      rounds: rounds.map(({ _id, ...r }) => r),
+      workspace_type: workspaceType,
+      ...(workspaceType === "code" ? { language } : {}),
+      ...(starterFiles ? { starter_files: starterFiles } : {}),
+      tension_level: tensionLevel,
     }
-    router.push(`/dashboard/assessments/${data.id}/invite`)
+
+    if (isEditing) {
+      const { error: updateError } = await supabase
+        .from("assessments")
+        .update(payload)
+        .eq("id", assessmentId)
+        .eq("company_id", companyId)
+      if (updateError) {
+        setError(updateError.message)
+        setSaving(false)
+        return
+      }
+      router.push("/dashboard")
+      router.refresh()
+    } else {
+      const { data, error: insertError } = await supabase
+        .from("assessments")
+        .insert({ ...payload, company_id: companyId, is_active: true })
+        .select()
+        .single()
+      if (insertError) {
+        setError(insertError.message)
+        setSaving(false)
+        return
+      }
+      router.push(`/dashboard/assessments/${data.id}/invite`)
+    }
   }
 
   return (
@@ -3146,7 +3167,7 @@ export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
                   <WizardCard
                     icon={<Code2 size={18} />}
                     title="Coding"
-                    description="Test engineering skills with a live challenge in a real sandbox."
+                    description="Test engineering skills with a live coding challenge."
                     onClick={() => goTo("search-coding")}
                   />
                   <WizardCard
@@ -3353,7 +3374,7 @@ export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
                   selected={workspaceType === "code"}
                   onSelect={() => setWorkspaceType("code")}
                   label="Code"
-                  description="Code editor + Claude Code terminal. Best for engineering and data roles."
+                  description="Code editor with AI assistance. Best for engineering and data roles."
                 />
               </div>
               {workspaceType === "code" && (
@@ -3503,7 +3524,7 @@ export function AssessmentCreator({ companyId }: AssessmentCreatorProps) {
               disabled={saving}
               className="btn-pill-dark disabled:opacity-60"
             >
-              {saving ? "Saving…" : "Save and get invite link →"}
+              {saving ? "Saving…" : isEditing ? "Save changes" : "Save and get invite link →"}
             </button>
           </motion.div>
         )}
@@ -3601,9 +3622,9 @@ function TemplateResultRow({
         onMouseLeave={() => setHovered(false)}
         className="w-full text-left px-4 py-3 flex items-center gap-3 transition-colors"
         style={{
-          background: selected ? "#f0f6ff" : hovered ? "var(--color-canvas)" : "transparent",
+          background: selected ? "color-mix(in srgb, var(--color-cobalt) 8%, var(--color-surface))" : hovered ? "var(--color-canvas)" : "transparent",
           cursor: "pointer",
-          borderBottom: selected ? "1px solid #dbeafe" : "none",
+          borderBottom: selected ? "1px solid color-mix(in srgb, var(--color-cobalt) 20%, var(--color-border))" : "none",
         }}
       >
         <div className="flex-1 min-w-0">
@@ -3627,7 +3648,7 @@ function TemplateResultRow({
               <span
                 key={tag}
                 className="text-xs px-1.5 py-0.5 rounded"
-                style={{ background: selected ? "#dbeafe" : "var(--color-canvas)", color: "var(--color-slate)" }}
+                style={{ background: selected ? "color-mix(in srgb, var(--color-cobalt) 15%, var(--color-canvas))" : "var(--color-canvas)", color: "var(--color-slate)" }}
               >
                 {tag}
               </span>
@@ -3909,7 +3930,7 @@ function TensionOption({
       className="text-left p-4 rounded-2xl transition-all"
       style={{
         border: selected ? "2px solid var(--color-cobalt)" : "2px solid var(--color-border)",
-        background: selected ? "#eff6ff" : "var(--color-surface)",
+        background: selected ? "color-mix(in srgb, var(--color-cobalt) 10%, var(--color-surface))" : "var(--color-surface)",
       }}
     >
       <p className="text-sm font-semibold mb-1" style={{ color: "var(--color-ink)" }}>
