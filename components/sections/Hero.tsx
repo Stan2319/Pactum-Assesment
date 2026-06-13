@@ -1,76 +1,58 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { stagger, fadeInUp } from "@/lib/motion"
+import { motion, useInView } from "framer-motion"
+import { useRef } from "react"
+import { fadeInUp, stagger } from "@/lib/motion"
+import { HeroDemoWidget } from "./HeroDemoWidget"
 
-export const Hero: React.FC = () => {
+export function Hero() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true })
+
   return (
     <section
       style={{
+        position: "relative",
         minHeight: "100svh",
+        background: "var(--color-canvas)",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        paddingTop: 80,
-        paddingBottom: 80,
-        paddingLeft: 24,
-        paddingRight: 24,
-        textAlign: "center",
-        position: "relative",
+        padding: "120px 24px 80px",
         overflow: "hidden",
+        backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)",
+        backgroundSize: "28px 28px",
       }}
     >
-      {/* Subtle dot grid background */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-          pointerEvents: "none",
-        }}
-      />
-
       <motion.div
+        ref={ref}
         variants={stagger}
         initial="hidden"
-        animate="visible"
+        animate={isInView ? "visible" : "hidden"}
         style={{
-          maxWidth: 780,
-          margin: "0 auto",
+          textAlign: "center",
+          maxWidth: 960,
+          width: "100%",
           position: "relative",
           zIndex: 1,
         }}
       >
         {/* Badge */}
-        <motion.div variants={fadeInUp} style={{ marginBottom: 32 }}>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-border-input)",
-              borderRadius: 9999,
-              padding: "6px 14px",
-              fontSize: "0.8125rem",
-              fontWeight: 500,
-              color: "var(--color-slate)",
-              boxShadow: "var(--shadow-whisper)",
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "#22c55e",
-                display: "inline-block",
-              }}
-            />
+        <motion.div variants={fadeInUp} style={{ marginBottom: 28 }}>
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: 9999,
+            padding: "4px 12px",
+            fontSize: "0.8125rem",
+            fontWeight: 500,
+            color: "var(--color-slate)",
+            boxShadow: "var(--shadow-whisper)",
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
             Now in private beta
           </span>
         </motion.div>
@@ -79,93 +61,80 @@ export const Hero: React.FC = () => {
         <motion.h1
           variants={fadeInUp}
           style={{
-            fontSize: "clamp(2.75rem, 7vw, 5.25rem)",
+            fontSize: "clamp(2rem, 4.5vw, 3.5rem)",
             fontWeight: 900,
-            lineHeight: 1.05,
+            lineHeight: 1.1,
             letterSpacing: "-0.04em",
             color: "var(--color-ink)",
-            marginBottom: 24,
+            margin: "0 0 20px",
           }}
         >
-          Hire for AI fluency,{" "}
-          <span
-            style={{
-              display: "inline-block",
+          <span style={{ display: "block" }}>Hire for AI fluency,</span>
+          <span style={{ display: "block", marginTop: "0.15em" }}>
+            <span style={{
               background: "var(--color-ink)",
               color: "var(--color-surface)",
-              padding: "0 12px",
-              borderRadius: 10,
-            }}
-          >
-            not memory.
+              padding: "2px 10px",
+              borderRadius: 6,
+            }}>
+              not memory.
+            </span>
           </span>
         </motion.h1>
 
-        {/* Sub-headline */}
+        {/* Subheadline */}
         <motion.p
           variants={fadeInUp}
           style={{
-            fontSize: "clamp(1.0625rem, 2.5vw, 1.25rem)",
-            fontWeight: 400,
-            lineHeight: 1.55,
+            fontSize: "1.125rem",
             color: "var(--color-slate)",
-            maxWidth: 560,
-            margin: "0 auto 48px",
+            lineHeight: 1.6,
+            maxWidth: 520,
+            margin: "0 auto 28px",
           }}
         >
-          Pactum gives candidates a real work task and lets them use any AI tool
-          to complete it, then hands you every prompt, every decision, and an
-          automatic score. No more trivia. No more six-hour take-homes.
+          Give candidates real work tasks. Let them use AI. Pactum records every prompt and decision, then scores the session automatically.
         </motion.p>
 
-        {/* Tally embed */}
-        <motion.div variants={fadeInUp} id="waitlist">
-          <iframe
-            data-tally-src="https://tally.so/embed/ODBEQg?alignLeft=0&hideTitle=1&transparentBackground=1&dynamicHeight=1"
-            loading="lazy"
-            width="100%"
-            height="160"
-            frameBorder={0}
-            marginHeight={0}
-            marginWidth={0}
-            title="Join the Pactum waitlist"
+        {/* CTA */}
+        <motion.div variants={fadeInUp} style={{ marginBottom: 40 }}>
+          <motion.a
+            href="#final-cta"
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
             style={{
-              maxWidth: 480,
-              display: "block",
-              margin: "0 auto",
+              display: "inline-flex",
+              alignItems: "center",
+              background: "var(--color-ink)",
+              color: "var(--color-surface)",
+              padding: "12px 32px",
+              borderRadius: 9999,
+              fontSize: "0.9375rem",
+              fontWeight: 600,
+              textDecoration: "none",
+              cursor: "pointer",
             }}
-          />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function() {
-                  var d = document, s = d.createElement('script');
-                  s.src = 'https://tally.so/widgets/embed.js';
-                  s.onload = function() { if (typeof Tally !== 'undefined') Tally.loadEmbeds(); };
-                  s.onerror = function() {
-                    d.querySelectorAll('[data-tally-src]').forEach(function(e) {
-                      e.src = e.dataset.tallySrc;
-                    });
-                  };
-                  d.body.appendChild(s);
-                })();
-              `,
-            }}
-          />
+          >
+            Join the waitlist
+          </motion.a>
         </motion.div>
 
-        {/* Social proof blurb */}
-        <motion.p
-          variants={fadeInUp}
-          style={{
-            marginTop: 24,
-            fontSize: "0.8125rem",
+        {/* Product demo animation */}
+        <motion.div variants={fadeInUp}>
+          <p style={{
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
             color: "var(--color-silver)",
-            fontWeight: 400,
-          }}
-        >
-          Trusted by early teams at Series A–C companies
-        </motion.p>
+            marginBottom: 12,
+          }}>
+            Live candidate session
+          </p>
+          <HeroDemoWidget />
+        </motion.div>
+
       </motion.div>
 
       {/* Scroll indicator */}
@@ -178,6 +147,10 @@ export const Hero: React.FC = () => {
           bottom: 32,
           left: "50%",
           transform: "translateX(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
         }}
       >
         <motion.div
@@ -185,11 +158,8 @@ export const Hero: React.FC = () => {
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
           style={{
             width: 1,
-            height: 32,
-            background:
-              "linear-gradient(to bottom, var(--color-silver), transparent)",
-            borderRadius: 1,
-            margin: "0 auto",
+            height: 40,
+            background: "linear-gradient(to bottom, var(--color-silver), transparent)",
           }}
         />
       </motion.div>

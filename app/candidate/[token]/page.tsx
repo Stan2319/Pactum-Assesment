@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { CandidateInterface } from "@/components/app/CandidateInterface"
+import { signSessionId } from "@/lib/session-token"
 
 interface Props {
   params: Promise<{ token: string }>
@@ -52,7 +53,7 @@ export default async function CandidatePage({ params }: Props) {
   // API routes verify this cookie matches the sessionId in the request body,
   // preventing unauthenticated callers from targeting arbitrary sessions.
   const cookieStore = await cookies()
-  cookieStore.set("pactum_cand_session", session.id, {
+  cookieStore.set("pactum_cand_session", signSessionId(session.id), {
     httpOnly: true,
     sameSite: "strict",
     path: "/",

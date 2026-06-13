@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { randomUUID } from "crypto"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,12 +12,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email and assessment are required" }, { status: 400 })
     }
 
+    // Require authenticated company user
+    const authClient = await createClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+    if (!rateLimit(`invite:${ip}`, 30, 10 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+    }
+
     const supabase = createAdminClient()
 
+    // Ownership check: assessment must belong to the calling user's company
     const { data: assessment } = await supabase
       .from("assessments")
       .select("id, company_id, is_active")
       .eq("id", assessmentId)
+      .eq("company_id", user.id)
       .eq("is_active", true)
       .single()
 

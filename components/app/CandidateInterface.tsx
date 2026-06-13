@@ -88,6 +88,7 @@ export function CandidateInterface({
   // Task context drawer
   const [contextDrawerOpen, setContextDrawerOpen] = useState(true)
   const [hasNewRound, setHasNewRound] = useState(false)
+  const [gradeError, setGradeError] = useState("")
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -299,15 +300,18 @@ function handleAcceptPatch() {
 
   async function handleFinish() {
     setSending(true)
+    setGradeError("")
     try {
-      await fetch("/api/grade", {
+      const res = await fetch("/api/grade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: session.id }),
       })
+      if (!res.ok) throw new Error("Submission failed")
       setSessionStatus("completed")
     } catch (err) {
       console.error("Grade error:", err)
+      setGradeError("Something went wrong submitting. Please try again.")
     } finally {
       setSending(false)
     }
@@ -513,11 +517,16 @@ function handleAcceptPatch() {
                 ? "You won't be able to go back. Make sure your work reflects your best effort."
                 : "This ends the assessment. Your full session will be scored."}
             </p>
+            {gradeError && (
+              <p className="text-xs mb-2 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600">
+                {gradeError}
+              </p>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={currentRound < totalRounds ? handleNextRound : handleFinish}
                 disabled={sending}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ background: "var(--color-ink)", color: "var(--color-canvas)", cursor: "pointer" }}
               >
                 {sending ? "Submitting…" : currentRound < totalRounds ? `Move to Round ${currentRound + 1} →` : "Yes, submit"}
@@ -556,7 +565,7 @@ function handleAcceptPatch() {
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-opacity disabled:opacity-30"
+                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ background: "var(--color-ink)", color: "var(--color-canvas)", cursor: "pointer" }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -591,8 +600,10 @@ function handleAcceptPatch() {
       {/* Drag handle */}
       <div
         onMouseDown={onDragStart}
-        className="shrink-0 hover:bg-blue-400 transition-colors"
+        className="shrink-0 transition-colors"
         style={{ width: 4, cursor: "col-resize", background: "var(--color-border)" }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-cobalt)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--color-border)")}
       />
 
       {/* Right: Workspace */}

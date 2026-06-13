@@ -115,6 +115,7 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
             label="New assessment"
             icon={<Plus size={14} />}
           />
+
         </nav>
 
         {/* Account button */}
@@ -145,7 +146,7 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
                 </div>
               </div>
 
-              <MenuAction icon={<CreditCard size={13} />} label="Billing" onClick={() => setAccountOpen(false)} />
+              <MenuAction icon={<CreditCard size={13} />} label="Billing · coming soon" onClick={() => setAccountOpen(false)} disabled />
 
               <div className="my-1 border-t" style={{ borderColor: "var(--color-border)" }} />
 
@@ -256,7 +257,7 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
               <button
                 onClick={() => { setDeleteConfirm(false); setDeleteError("") }}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "var(--color-canvas)", color: "var(--color-ink)", border: "1px solid var(--color-border)", cursor: "pointer" }}
               >
                 Cancel
@@ -264,7 +265,7 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "#dc2626", color: "#fff", cursor: "pointer" }}
               >
                 {deleting ? "Deleting…" : "Yes, delete everything"}
@@ -303,26 +304,30 @@ function NavLink({
 }
 
 function MenuAction({
-  icon, label, onClick, danger,
+  icon, label, onClick, danger, disabled,
 }: {
   icon: React.ReactNode
   label: string
   onClick: () => void
   danger?: boolean
+  disabled?: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   return (
     <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
+      onClick={disabled ? undefined : onClick}
+      onMouseEnter={() => !disabled && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors"
       style={{
-        color: danger
+        color: disabled
+          ? "var(--color-silver)"
+          : danger
           ? hovered ? "#dc2626" : "#e57373"
           : hovered ? "var(--color-ink)" : "var(--color-slate)",
-        background: hovered ? "var(--color-canvas)" : "transparent",
-        cursor: "pointer",
+        background: hovered && !disabled ? "var(--color-canvas)" : "transparent",
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.6 : 1,
       }}
     >
       {icon}

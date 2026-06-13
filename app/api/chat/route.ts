@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { WorkspaceType, DocumentState } from "@/lib/types"
+import { verifySessionCookie } from "@/lib/session-token"
 
 const PATCH_SENTINEL = "\n<|PATCH|>"
 
@@ -222,7 +223,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  if (!cookieSession || cookieSession !== sessionId) {
+  if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

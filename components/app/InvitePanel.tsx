@@ -197,7 +197,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
           <button
             type="submit"
             disabled={loading || !email.trim()}
-            className="cursor-pointer shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
+            className="cursor-pointer shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: "var(--color-ink)", color: "#fff" }}
           >
             {loading ? "Generating…" : "Generate link"}
@@ -310,7 +310,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
                 type="button"
                 onClick={handleBulkGenerate}
                 disabled={csvLoading}
-                className="cursor-pointer flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
+                className="cursor-pointer flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "var(--color-ink)", color: "#fff" }}
               >
                 {csvLoading

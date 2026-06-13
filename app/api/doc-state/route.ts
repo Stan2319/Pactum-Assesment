@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { verifySessionCookie } from "@/lib/session-token"
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function PATCH(req: NextRequest) {
 
     // Verify the caller owns this session via cookie
     const cookieSession = req.cookies.get("pactum_cand_session")?.value
-    if (!cookieSession || cookieSession !== sessionId) {
+    if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

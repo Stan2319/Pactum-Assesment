@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import type { Message, Assessment, DocumentStateReport, DocumentStateEmail, DocumentStateSpreadsheet, DocumentStateDeck, DocumentStateCode } from "@/lib/types"
+import { verifySessionCookie } from "@/lib/session-token"
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -189,7 +190,7 @@ export async function POST(req: NextRequest) {
     } else {
       // Initial grade comes from the candidate — verify cookie
       const cookieSession = req.cookies.get("pactum_cand_session")?.value
-      if (!cookieSession || cookieSession !== sessionId) {
+      if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
     }

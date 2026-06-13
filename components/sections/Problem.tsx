@@ -2,54 +2,38 @@
 
 import { motion, useInView } from "framer-motion"
 import { useRef } from "react"
-import { stagger, fadeInUp, scaleIn } from "@/lib/motion"
 import { X, Check } from "lucide-react"
+import { fadeInUp, stagger, scaleIn } from "@/lib/motion"
 
-interface Comparison {
-  broken: string
-  fixed: string
-}
-
-const comparisons: Comparison[] = [
-  {
-    broken: "Tests who can memorize a sorting algorithm at 11 pm",
-    fixed: "Tests who can turn a vague brief into a polished deliverable",
-  },
-  {
-    broken: "Filters out candidates who google things, like every real engineer",
-    fixed: "Rewards candidates who know which AI tool to reach for",
-  },
-  {
-    broken: "Takes 5 hours and burns candidates out before day one",
-    fixed: "45-minute focused task. Signals respect from the start",
-  },
-  {
-    broken: "Evaluator bias: whoever reviewed it last sets the bar",
-    fixed: "Consistent rubric-based scoring across every submission",
-  },
+const rows = [
+  { old: "Tests memorization and endurance", new: "Tests real work output with AI tools" },
+  { old: "You see the answer, nothing else", new: "You see every prompt, revision, and decision" },
+  { old: "Manual review takes hours per candidate", new: "Every session scored automatically in seconds" },
+  { old: "Top candidates skip long unpaid take-homes", new: "Async, focused tasks candidates actually respect" },
 ]
 
-export const Problem: React.FC = () => {
+export function Problem() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-80px" })
 
   return (
     <section
-      ref={ref}
       style={{
-        padding: "120px 24px",
         background: "var(--color-surface)",
         borderTop: "1px solid var(--color-border)",
         borderBottom: "1px solid var(--color-border)",
+        padding: "120px 24px",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        {/* Header */}
         <motion.div
+          ref={ref}
           variants={stagger}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
+          style={{ textAlign: "center", marginBottom: 56 }}
         >
-          {/* Header */}
           <motion.p
             variants={fadeInUp}
             style={{
@@ -58,13 +42,11 @@ export const Problem: React.FC = () => {
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               color: "var(--color-silver)",
-              marginBottom: 16,
-              textAlign: "center",
+              marginBottom: 12,
             }}
           >
             The problem
           </motion.p>
-
           <motion.h2
             variants={fadeInUp}
             style={{
@@ -73,71 +55,43 @@ export const Problem: React.FC = () => {
               lineHeight: 1.1,
               letterSpacing: "-0.03em",
               color: "var(--color-ink)",
-              textAlign: "center",
-              maxWidth: 680,
-              margin: "0 auto 16px",
+              marginBottom: 16,
             }}
           >
-            LeetCode tests the wrong thing. Take-homes waste everyone&apos;s
-            time.
+            Your hiring process was designed before AI existed.
           </motion.h2>
-
           <motion.p
             variants={fadeInUp}
             style={{
               fontSize: "1.0625rem",
               color: "var(--color-slate)",
-              textAlign: "center",
-              maxWidth: 520,
-              margin: "0 auto 72px",
               lineHeight: 1.6,
+              maxWidth: 540,
+              margin: "0 auto",
             }}
           >
-            The hiring stack hasn&apos;t changed since 2010. The work has.
-            AI-native teams need AI-native screening.
+            LeetCode tests memory. Take-homes test endurance. Neither one tells you whether a candidate can do the job now that AI is part of every job.
           </motion.p>
+        </motion.div>
 
-          {/* Comparison table */}
-          <motion.div
-            variants={stagger}
-            style={{ display: "flex", flexDirection: "column", gap: 0 }}
-          >
-            {/* Column headers */}
-            <motion.div
-              variants={fadeInUp}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 16,
-                marginBottom: 12,
-                padding: "0 8px",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "0.8125rem",
-                  fontWeight: 600,
-                  color: "var(--color-silver)",
-                  letterSpacing: "0.05em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Old way
-              </span>
-              <span
-                style={{
-                  fontSize: "0.8125rem",
-                  fontWeight: 600,
-                  color: "var(--color-silver)",
-                  letterSpacing: "0.05em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Pactum way
-              </span>
-            </motion.div>
+        {/* Comparison table */}
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
+          {/* Column headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 12 }}>
+            <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-silver)", margin: 0, paddingLeft: 8 }}>
+              Old way
+            </p>
+            <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-silver)", margin: 0, paddingLeft: 8 }}>
+              Pactum way
+            </p>
+          </div>
 
-            {comparisons.map((c, i) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {rows.map((row, i) => (
               <motion.div
                 key={i}
                 variants={scaleIn}
@@ -145,76 +99,49 @@ export const Problem: React.FC = () => {
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
                   gap: 16,
-                  padding: "20px 8px",
-                  borderTop:
-                    i === 0
-                      ? "1px solid var(--color-border)"
-                      : "1px solid var(--color-border)",
-                  borderBottom:
-                    i === comparisons.length - 1
-                      ? "1px solid var(--color-border)"
-                      : "none",
+                  padding: "14px 8px",
+                  borderBottom: i < rows.length - 1 ? "1px solid var(--color-border)" : "none",
                 }}
               >
-                {/* Broken */}
-                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      background: "#fee2e2",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginTop: 1,
-                    }}
-                  >
-                    <X size={12} color="#ef4444" strokeWidth={2.5} />
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: "#fee2e2",
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}>
+                    <X size={12} style={{ color: "#ef4444", strokeWidth: 2.5 }} />
                   </span>
-                  <p
-                    style={{
-                      fontSize: "0.9375rem",
-                      color: "var(--color-slate)",
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    {c.broken}
-                  </p>
+                  <span style={{ fontSize: "0.9375rem", color: "var(--color-slate)", lineHeight: 1.55 }}>
+                    {row.old}
+                  </span>
                 </div>
-
-                {/* Fixed */}
-                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      background: "#dcfce7",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginTop: 1,
-                    }}
-                  >
-                    <Check size={12} color="#16a34a" strokeWidth={2.5} />
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: "#dcfce7",
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}>
+                    <Check size={12} style={{ color: "#16a34a", strokeWidth: 2.5 }} />
                   </span>
-                  <p
-                    style={{
-                      fontSize: "0.9375rem",
-                      color: "var(--color-ink-near)",
-                      lineHeight: 1.55,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {c.fixed}
-                  </p>
+                  <span style={{ fontSize: "0.9375rem", color: "var(--color-ink-near)", lineHeight: 1.55, fontWeight: 500 }}>
+                    {row.new}
+                  </span>
                 </div>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </section>

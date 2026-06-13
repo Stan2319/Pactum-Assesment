@@ -172,7 +172,9 @@ export function RecentCandidates({ sessions, assessments }: RecentCandidatesProp
 
         {filtered.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm" style={{ color: "var(--color-slate)" }}>
-            No candidates match the selected filters.
+            {sessions.length === 0
+              ? "No candidates have started an assessment yet."
+              : "No candidates match the selected filters."}
           </div>
         ) : (
           filtered.map((s, i) => {

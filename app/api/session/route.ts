@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { verifySessionCookie } from "@/lib/session-token"
 
 const ALLOWED_STATUSES = new Set(["in_progress", "completed", "abandoned"])
 
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     // Verify the caller owns this session via cookie
     const cookieSession = getCandidateSession(req)
-    if (!cookieSession || cookieSession !== sessionId) {
+    if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -58,7 +59,7 @@ export async function PATCH(req: NextRequest) {
 
     // Verify the caller owns this session via cookie
     const cookieSession = getCandidateSession(req)
-    if (!cookieSession || cookieSession !== sessionId) {
+    if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

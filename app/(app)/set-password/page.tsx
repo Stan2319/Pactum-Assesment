@@ -21,7 +21,7 @@ export default function SetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirm) { setError("Passwords don't match."); return }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return }
+    if (password.length < 12) { setError("Password must be at least 12 characters."); return }
     setError("")
     setLoading(true)
     const supabase = createClient()

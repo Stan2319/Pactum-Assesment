@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
+import sanitizeHtmlLib from "sanitize-html"
 import { DashboardShell } from "@/components/app/DashboardShell"
 import { RoundReplay } from "@/components/app/RoundReplay"
 import { CodeOutputViewer } from "@/components/app/CodeOutputViewer"
@@ -207,14 +208,24 @@ export default async function ResultsPage({ params }: Props) {
 // Strip dangerous elements/attributes from candidate-generated HTML before rendering.
 // Allows only the Tiptap-compatible subset: block elements, inline formatting, tables.
 function sanitizeHtml(html: string): string {
-  return html
-    // Remove script, style, iframe, object, embed, form, input, link, meta tags entirely
-    .replace(/<(script|style|iframe|object|embed|form|input|button|link|meta|base|noscript)[^>]*>[\s\S]*?<\/\1>/gi, "")
-    .replace(/<(script|style|iframe|object|embed|form|input|button|link|meta|base|noscript)[^>]*\/?>/gi, "")
-    // Remove on* event attributes (onclick, onerror, onload, etc.)
-    .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "")
-    // Remove javascript: and data: URIs in href/src/action
-    .replace(/\s+(href|src|action)\s*=\s*["']?\s*(javascript:|data:|vbscript:)[^"'\s>]*/gi, "")
+  return sanitizeHtmlLib(html, {
+    allowedTags: [
+      "p", "br", "b", "i", "strong", "em", "u", "s", "strike",
+      "h1", "h2", "h3", "h4", "h5", "h6",
+      "ul", "ol", "li",
+      "blockquote", "pre", "code",
+      "table", "thead", "tbody", "tr", "th", "td",
+      "a", "img", "hr",
+    ],
+    allowedAttributes: {
+      "a": ["href", "target", "rel"],
+      "img": ["src", "alt", "width", "height"],
+      "td": ["colspan", "rowspan"],
+      "th": ["colspan", "rowspan"],
+      "*": ["class", "style"],
+    },
+    allowedSchemes: ["https", "http", "mailto"],
+  })
 }
 
 function FinalOutput({ workspaceType, docState }: { workspaceType: string; docState: unknown }) {

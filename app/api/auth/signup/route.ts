@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+
+    if (!rateLimit(`signup:${ip}`, 5, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+    }
+
     const { name, email } = await req.json()
     if (!name || !email) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 })
