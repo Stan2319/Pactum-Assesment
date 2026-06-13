@@ -4,6 +4,7 @@ import { Hero } from "@/components/sections/Hero"
 import { HowItWorks } from "@/components/sections/HowItWorks"
 import { Problem } from "@/components/sections/Problem"
 import { Pricing } from "@/components/sections/Pricing"
+import { ResearchStudy } from "@/components/sections/ResearchStudy"
 import { FAQ } from "@/components/sections/FAQ"
 import { FinalCTA } from "@/components/sections/FinalCTA"
 import Footer from "@/components/Footer"
@@ -37,6 +38,7 @@ export default async function Home({ searchParams }: Props) {
         <Hero />
         <HowItWorks />
         <Problem />
+        <ResearchStudy />
         <Pricing />
         <FAQ />
         <FinalCTA />
