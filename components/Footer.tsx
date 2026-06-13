@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 
-export const Footer: React.FC = () => {
+export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
@@ -10,67 +10,57 @@ export const Footer: React.FC = () => {
       style={{
         background: "var(--color-banner-dark)",
         borderTop: "1px solid rgba(255,255,255,0.06)",
-        padding: "40px 24px",
+        padding: "28px 24px",
       }}
     >
       <div
         style={{
-          maxWidth: 1100,
+          maxWidth: 1200,
           margin: "0 auto",
           display: "flex",
-          flexWrap: "wrap",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
           gap: 16,
         }}
       >
-        {/* Logo */}
         <span
           style={{
             fontWeight: 800,
             fontSize: "1rem",
-            letterSpacing: "-0.04em",
             color: "rgba(255,255,255,0.9)",
+            letterSpacing: "-0.04em",
           }}
         >
           Pactum
         </span>
 
-        {/* Links */}
-        <nav
-          style={{ display: "flex", gap: 24, flexWrap: "wrap" }}
-          aria-label="Footer navigation"
-        >
+        <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           {[
             { label: "Privacy", href: "#" },
             { label: "Terms", href: "#" },
             { label: "Contact", href: "mailto:hello@pactum.so" },
-          ].map((link) => (
+          ].map(({ label, href }) => (
             <motion.a
-              key={link.label}
-              href={link.href}
+              key={label}
+              href={href}
               whileHover={{ color: "rgba(255,255,255,0.9)" }}
+              transition={{ duration: 0.15 }}
               style={{
-                fontSize: "0.875rem",
                 color: "rgba(255,255,255,0.35)",
+                fontSize: "0.875rem",
                 textDecoration: "none",
-                transition: "color 0.15s",
+                cursor: "pointer",
               }}
             >
-              {link.label}
+              {label}
             </motion.a>
           ))}
-        </nav>
+        </div>
 
-        {/* Copyright */}
-        <p
-          style={{
-            fontSize: "0.8125rem",
-            color: "rgba(255,255,255,0.25)",
-          }}
-        >
-          &copy; {year} Pactum. All rights reserved.
-        </p>
+        <span style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.25)" }}>
+          © {year} Pactum. All rights reserved.
+        </span>
       </div>
     </footer>
   )

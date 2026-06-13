@@ -1,19 +1,19 @@
 "use client"
 
 import { motion, useScroll } from "framer-motion"
-import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 
-export const Nav: React.FC = () => {
-  const [scrolled, setScrolled] = useState(false)
+export default function Nav() {
   const { scrollY } = useScroll()
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    return scrollY.on("change", (y) => setScrolled(y > 20))
+    return scrollY.on("change", (v) => setScrolled(v > 20))
   }, [scrollY])
 
   return (
-    <motion.header
+    <motion.nav
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -23,89 +23,66 @@ export const Nav: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 50,
+        height: 60,
+        display: "flex",
+        alignItems: "center",
         background: scrolled ? "rgba(240,240,243,0.85)" : "transparent",
         backdropFilter: scrolled ? "blur(16px)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(16px)" : "none",
-        borderBottom: scrolled
-          ? "1px solid var(--color-border)"
-          : "1px solid transparent",
-        transition: "background 0.3s, border-color 0.3s, backdrop-filter 0.3s",
+        borderBottom: scrolled ? "1px solid var(--color-border)" : "1px solid transparent",
+        transition: "background 0.2s, border-color 0.2s",
       }}
     >
-      <div
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "0 24px",
-          height: 60,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Logo */}
-        <a
-          href="/"
-          style={{
+      <div style={{
+        width: "100%",
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: "0 24px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}>
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <span style={{
             fontWeight: 800,
             fontSize: "1.1rem",
-            letterSpacing: "-0.04em",
             color: "var(--color-ink)",
-            textDecoration: "none",
-          }}
-        >
-          Pactum
-        </a>
+            letterSpacing: "-0.04em",
+          }}>
+            Pactum
+          </span>
+        </Link>
 
-        {/* Nav links, desktop only */}
-        <nav
-          style={{
-            display: "flex",
-            gap: 32,
-            alignItems: "center",
-          }}
-          className="hidden md:flex"
-        >
-          {["How it works", "Pricing"].map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase().replace(/\s+/g, "-")}`}
+        <div className="hidden md:flex" style={{ gap: 32, alignItems: "center" }}>
+          {["How it works", "Pricing"].map((label) => (
+            <Link
+              key={label}
+              href={`#${label === "How it works" ? "how-it-works" : "pricing"}`}
               style={{
-                fontSize: "0.9375rem",
-                fontWeight: 500,
                 color: "var(--color-slate)",
+                fontSize: "0.875rem",
+                fontWeight: 500,
                 textDecoration: "none",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={(e) =>
-                ((e.target as HTMLAnchorElement).style.color =
-                  "var(--color-ink)")
-              }
-              onMouseLeave={(e) =>
-                ((e.target as HTMLAnchorElement).style.color =
-                  "var(--color-slate)")
-              }
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-ink)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-slate)")}
             >
-              {link}
-            </a>
+              {label}
+            </Link>
           ))}
-        </nav>
+        </div>
 
-        {/* CTA */}
-        <motion.div
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
           <Link
             href="/login"
             className="btn-pill-dark"
-            style={{ padding: "9px 22px", fontSize: "0.875rem", display: "inline-block", textDecoration: "none" }}
+            style={{ padding: "9px 22px", fontSize: "0.875rem" }}
           >
             Log in
           </Link>
         </motion.div>
       </div>
-    </motion.header>
+    </motion.nav>
   )
 }
