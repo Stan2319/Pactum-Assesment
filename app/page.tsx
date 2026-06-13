@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation"
-import { Nav } from "@/components/Nav"
+import Nav from "@/components/Nav"
 import { Hero } from "@/components/sections/Hero"
 import { HowItWorks } from "@/components/sections/HowItWorks"
 import { Problem } from "@/components/sections/Problem"
 import { Pricing } from "@/components/sections/Pricing"
+import { FAQ } from "@/components/sections/FAQ"
 import { FinalCTA } from "@/components/sections/FinalCTA"
-import { Footer } from "@/components/Footer"
+import Footer from "@/components/Footer"
 import { AuthHashHandler } from "@/components/AuthHashHandler"
 
 interface Props {
@@ -30,7 +31,6 @@ export default async function Home({ searchParams }: Props) {
 
   return (
     <>
-      {/* Handles tokens delivered as URL hash fragments (#access_token=...) */}
       <AuthHashHandler />
       <Nav />
       <main>
@@ -38,6 +38,7 @@ export default async function Home({ searchParams }: Props) {
         <HowItWorks />
         <Problem />
         <Pricing />
+        <FAQ />
         <FinalCTA />
       </main>
       <Footer />

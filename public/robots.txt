@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /reset-password
+Disallow: /set-password
+Disallow: /auth/
+Disallow: /api/
+
+# Allow AI search and citation bots
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Block Common Crawl (training dataset, not search)
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://pactum.so/sitemap.xml

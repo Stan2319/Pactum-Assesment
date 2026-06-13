@@ -1,0 +1,41 @@
+# Pactum
+
+> AI-powered hiring assessment platform that tests how well candidates use AI tools on real work tasks, not whether they can memorize algorithms.
+
+## What Pactum Does
+
+Pactum replaces LeetCode-style tests and open-ended take-home assignments with structured, AI-native hiring assessments. Candidates complete realistic job tasks (email, code review, written analysis, slide deck) using built-in AI tools. Pactum records every prompt, every revision, and every decision, then scores the session automatically on technical depth, AI fluency, and output quality.
+
+Hiring teams get a ranked list of candidates with detailed session replays and automatic scores — no manual review required.
+
+## Who It's For
+
+- Hiring managers and talent acquisition teams at SaaS, fintech, and marketing companies
+- Teams hiring for roles where AI tool proficiency matters (engineering, product, marketing, operations)
+- Companies frustrated with LeetCode tests that reward memorization, or take-homes that top candidates skip
+
+## Key Differentiators
+
+- Tests AI fluency, not memory — candidates use AI tools as part of the task
+- Full session capture — every prompt, revision, and decision is recorded
+- Automatic scoring — no manual review, no rubric writing
+- Async and candidate-friendly — focused tasks that respect candidate time
+- Real work tasks — email, code review, written analysis, slide deck (not algorithm puzzles)
+
+## Pricing
+
+- Starter: $99/month — up to 5 active assessments, unlimited candidates
+- Professional: $549/month — unlimited assessments, custom rubric builder, priority support
+
+Full pricing: https://pactum.so/#pricing
+
+## Key Pages
+
+- Homepage: https://pactum.so
+- Pricing: https://pactum.so/#pricing
+- Contact: hello@pactum.so
+- Machine-readable pricing: https://pactum.so/pricing.md
+
+## Status
+
+Currently in private beta. Waitlist open at https://pactum.so/#final-cta
