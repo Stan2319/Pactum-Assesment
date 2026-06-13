@@ -4,6 +4,7 @@ import { motion, useInView } from "framer-motion"
 import { useRef } from "react"
 import { fadeInUp, stagger } from "@/lib/motion"
 import { HeroDemoWidget } from "./HeroDemoWidget"
+import { HeroWalkers } from "./HeroWalkers"
 
 export function Hero() {
   const ref = useRef(null)
@@ -24,6 +25,8 @@ export function Hero() {
         backgroundSize: "28px 28px",
       }}
     >
+      <HeroWalkers />
+
       <motion.div
         ref={ref}
         variants={stagger}
