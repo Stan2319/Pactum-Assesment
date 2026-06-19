@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/app/DashboardShell"
 import { RoundReplay } from "@/components/app/RoundReplay"
 import { CodeOutputViewer } from "@/components/app/CodeOutputViewer"
 import { RegradeButton } from "@/components/app/RegradeButton"
+import { ShareButton } from "@/components/app/ShareButton"
 import type { Message, Score, Assessment, Candidate, DocumentStateReport, DocumentStateEmail, DocumentStateSpreadsheet, DocumentStateDeck } from "@/lib/types"
 
 interface Props {
@@ -86,7 +87,10 @@ export default async function ResultsPage({ params }: Props) {
           <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
             Score
           </h2>
-          <RegradeButton sessionId={sessionId} />
+          <div className="flex items-center gap-2">
+            {session.share_token && <ShareButton shareToken={session.share_token} />}
+            <RegradeButton sessionId={sessionId} />
+          </div>
         </div>
         {score ? (
           <div
@@ -102,8 +106,8 @@ export default async function ResultsPage({ params }: Props) {
                   style={{
                     width: 96,
                     height: 96,
-                    border: `3px solid ${scoreColor(score.total_score).border}`,
-                    background: scoreColor(score.total_score).bg,
+                    border: `4px solid ${scoreColor(score.total_score).border}`,
+                    background: "var(--color-surface)",
                   }}
                 >
                   <span
@@ -150,13 +154,12 @@ export default async function ResultsPage({ params }: Props) {
               className="px-6 pb-6 grid grid-cols-3 gap-4"
               style={{ borderTop: "1px solid var(--color-border)", paddingTop: 24 }}
             >
-              <FeedbackColumn title="Strengths" items={score.strengths} color="#065f46" bg="#d1fae5" />
-              <FeedbackColumn title="Areas to improve" items={score.improvements} color="#92400e" bg="#fef3c7" />
+              <FeedbackColumn title="Strengths" items={score.strengths} accentColor="#22c55e" />
+              <FeedbackColumn title="Areas to improve" items={score.improvements} accentColor="#f59e0b" />
               <FeedbackColumn
                 title="Red flags"
                 items={score.red_flags?.length ? score.red_flags : ["None detected"]}
-                color={score.red_flags?.length ? "#991b1b" : "#065f46"}
-                bg={score.red_flags?.length ? "#fee2e2" : "#d1fae5"}
+                accentColor={score.red_flags?.length ? "#ef4444" : "#22c55e"}
               />
             </div>
           </div>
@@ -351,9 +354,9 @@ function FinalOutput({ workspaceType, docState }: { workspaceType: string; docSt
 }
 
 function scoreColor(score: number) {
-  if (score >= 80) return { bg: "#d1fae5", border: "#6ee7b7", text: "#065f46" }
-  if (score >= 60) return { bg: "#fef3c7", border: "#fcd34d", text: "#92400e" }
-  return { bg: "#fee2e2", border: "#fca5a5", text: "#991b1b" }
+  if (score >= 80) return { border: "#22c55e", text: "#22c55e" }
+  if (score >= 60) return { border: "#f59e0b", text: "#f59e0b" }
+  return { border: "#ef4444", text: "#ef4444" }
 }
 
 function scoreGrade(score: number) {
@@ -397,24 +400,37 @@ function ScoreCell({ label, score, max }: { label: string; score: number; max: n
 }
 
 function FeedbackColumn({
-  title, items, color, bg,
+  title, items, accentColor,
 }: {
   title: string
   items: string[]
-  color: string
-  bg: string
+  accentColor: string
 }) {
   return (
-    <div>
-      <p className="text-xs font-semibold mb-2.5" style={{ color: "var(--color-ink-near)" }}>{title}</p>
-      <ul className="space-y-1.5">
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{
+        border: "1px solid var(--color-border)",
+        borderLeft: `3px solid ${accentColor}`,
+      }}
+    >
+      <div
+        className="px-3 py-2.5"
+        style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-canvas)" }}
+      >
+        <span className="text-xs font-semibold" style={{ color: accentColor }}>{title}</span>
+      </div>
+      <ul style={{ background: "var(--color-surface)" }}>
         {items.map((item, i) => (
           <li
             key={i}
-            className="text-xs leading-relaxed px-2.5 py-1.5 rounded-lg"
-            style={{ background: bg, color }}
+            className="flex items-start gap-2 px-3 py-2.5 text-xs leading-relaxed"
+            style={{ borderBottom: i < items.length - 1 ? "1px solid var(--color-border)" : "none" }}
           >
-            {item.replace(/\u2014|\u2013/g, ",")}
+            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[5px]" style={{ background: accentColor }} />
+            <span style={{ color: "var(--color-ink-near)" }}>
+              {item.replace(/\u2014|\u2013/g, ",")}
+            </span>
           </li>
         ))}
       </ul>

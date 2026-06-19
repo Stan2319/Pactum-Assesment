@@ -78,7 +78,7 @@ export function RecentCandidates({ sessions, assessments }: RecentCandidatesProp
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
               style={{
                 border: activeCount > 0 ? "1.5px solid var(--color-cobalt)" : "1.5px solid var(--color-border)",
-                background: activeCount > 0 ? "#eff6ff" : "var(--color-surface)",
+                background: activeCount > 0 ? "color-mix(in srgb, var(--color-cobalt) 10%, var(--color-canvas))" : "var(--color-surface)",
                 color: activeCount > 0 ? "var(--color-cobalt)" : "var(--color-slate)",
                 cursor: "pointer",
                 fontWeight: activeCount > 0 ? 600 : 400,
@@ -254,35 +254,29 @@ export function RecentCandidates({ sessions, assessments }: RecentCandidatesProp
 }
 
 function ScoreChip({ score }: { score: number }) {
-  const color =
-    score >= 80
-      ? { text: "#065f46", bg: "#d1fae5" }
-      : score >= 60
-      ? { text: "#92400e", bg: "#fef3c7" }
-      : { text: "#991b1b", bg: "#fee2e2" }
-
+  const color = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444"
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black"
-      style={{ background: color.bg, color: color.text, letterSpacing: "-0.02em" }}
+      className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs"
+      style={{ background: "var(--color-canvas)", color, border: `1px solid ${color}`, minWidth: "4rem" }}
     >
-      {score}
-      <span className="font-normal opacity-60" style={{ fontSize: 10 }}>/100</span>
+      <span className="font-bold">{score}</span>
+      <span className="font-bold" style={{ opacity: 0.75 }}>/100</span>
     </span>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, { bg: string; color: string; label: string }> = {
-    in_progress: { bg: "#fef3c7", color: "#92400e", label: "In progress" },
-    completed: { bg: "#d1fae5", color: "#065f46", label: "Completed" },
-    abandoned: { bg: "#f3f4f6", color: "#6b7280", label: "Abandoned" },
+  const styles: Record<string, { color: string; label: string }> = {
+    in_progress: { color: "#f59e0b", label: "In progress" },
+    completed: { color: "#22c55e", label: "Completed" },
+    abandoned: { color: "var(--color-silver)", label: "Abandoned" },
   }
   const s = styles[status] ?? styles.abandoned
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-      style={{ background: s.bg, color: s.color }}
+      style={{ background: "var(--color-canvas)", color: s.color, border: `1px solid ${s.color}` }}
     >
       {s.label}
     </span>

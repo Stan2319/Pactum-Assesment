@@ -2951,6 +2951,7 @@ export function AssessmentCreator({ companyId, initialData, assessmentId }: Asse
   const [role, setRole] = useState(initialData?.role ?? "")
   const [description, setDescription] = useState(initialData?.description ?? "")
   const [tensionLevel, setTensionLevel] = useState<"junior" | "senior">(initialData?.tension_level ?? "junior")
+  const [notifyEmailsInput, setNotifyEmailsInput] = useState((initialData?.notify_emails ?? []).join(", "))
   const nextId = useRef(2)
   const [rounds, setRounds] = useState<(AssessmentRound & { _id: number })[]>(
     initialData
@@ -3072,6 +3073,11 @@ export function AssessmentCreator({ companyId, initialData, assessmentId }: Asse
     setSaving(true)
     setError("")
 
+    const notifyEmails = notifyEmailsInput
+      .split(",")
+      .map(e => e.trim())
+      .filter(e => e.includes("@"))
+
     const payload = {
       title,
       role,
@@ -3081,6 +3087,7 @@ export function AssessmentCreator({ companyId, initialData, assessmentId }: Asse
       ...(workspaceType === "code" ? { language } : {}),
       ...(starterFiles ? { starter_files: starterFiles } : {}),
       tension_level: tensionLevel,
+      notify_emails: notifyEmails,
     }
 
     if (isEditing) {
@@ -3515,6 +3522,33 @@ export function AssessmentCreator({ companyId, initialData, assessmentId }: Asse
               </div>
             </div>
 
+            {/* Notify emails */}
+            <div
+              className="rounded-2xl p-5 space-y-2"
+              style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+            >
+              <div>
+                <p className="text-sm font-semibold" style={{ color: "var(--color-ink-near)" }}>
+                  Notify when candidate finishes
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-slate)" }}>
+                  Email addresses to notify with a results link once a candidate completes this assessment. Separate multiple with commas.
+                </p>
+              </div>
+              <input
+                type="text"
+                value={notifyEmailsInput}
+                onChange={e => setNotifyEmailsInput(e.target.value)}
+                placeholder="recruiter@company.com, manager@company.com"
+                className="w-full rounded-lg px-3 py-2 text-sm outline-none transition-colors"
+                style={{
+                  background: "var(--color-canvas)",
+                  border: "1px solid var(--color-border-input)",
+                  color: "var(--color-ink-near)",
+                }}
+              />
+            </div>
+
             {error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
             )}
@@ -3635,7 +3669,7 @@ function TemplateResultRow({
             <span
               className="text-xs px-1.5 py-0.5 rounded-full"
               style={{
-                background: template.workspace === "code" ? "#eff6ff" : "var(--color-canvas)",
+                background: template.workspace === "code" ? "color-mix(in srgb, var(--color-cobalt) 10%, var(--color-canvas))" : "var(--color-canvas)",
                 color: template.workspace === "code" ? "var(--color-cobalt)" : "var(--color-slate)",
                 border: template.workspace === "code" ? "none" : "1px solid var(--color-border)",
               }}
@@ -3672,7 +3706,7 @@ function TemplateResultRow({
             exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: "easeIn" } }}
             style={{ overflow: "hidden", borderBottom: last ? "none" : "1px solid var(--color-border)" }}
           >
-            <div className="px-4 pb-4 pt-3" style={{ background: "#f0f6ff" }}>
+            <div className="px-4 pb-4 pt-3" style={{ background: "color-mix(in srgb, var(--color-cobalt) 5%, var(--color-surface))" }}>
               {/* Description */}
               <p
                 className="text-xs leading-relaxed mb-3"
@@ -3698,9 +3732,9 @@ function TemplateResultRow({
                       <span
                         className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
                         style={{
-                          background: "#dbeafe",
+                          background: "color-mix(in srgb, var(--color-cobalt) 15%, var(--color-canvas))",
                           color: "var(--color-cobalt)",
-                          border: "1px solid #bfdbfe",
+                          border: "1px solid color-mix(in srgb, var(--color-cobalt) 30%, var(--color-border))",
                         }}
                       >
                         {r.round}
@@ -3750,7 +3784,7 @@ function TemplatePreviewPanel({
           {template.language && (
             <span
               className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: "#eff6ff", color: "var(--color-cobalt)" }}
+              style={{ background: "color-mix(in srgb, var(--color-cobalt) 10%, var(--color-canvas))", color: "var(--color-cobalt)" }}
             >
               {template.language === "python" ? "Python" : "JavaScript"}
             </span>

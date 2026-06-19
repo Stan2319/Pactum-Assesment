@@ -63,7 +63,7 @@ export function RoundReplay({ rounds, messages }: Props) {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer"
                 style={{
                   background: isActive ? "var(--color-ink)" : "var(--color-surface)",
-                  color: isActive ? "#fff" : "var(--color-slate)",
+                  color: isActive ? "var(--color-canvas)" : "var(--color-slate)",
                   border: `1px solid ${isActive ? "var(--color-ink)" : "var(--color-border)"}`,
                 }}
               >

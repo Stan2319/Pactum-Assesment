@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import type { Message, Assessment, DocumentStateReport, DocumentStateEmail, DocumentStateSpreadsheet, DocumentStateDeck, DocumentStateCode } from "@/lib/types"
 import { verifySessionCookie } from "@/lib/session-token"
+import { sendResultsNotification } from "@/lib/email"
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -310,10 +311,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to save score" }, { status: 500 })
     }
 
-    await supabase
+    const { data: completedSession } = await supabase
       .from("sessions")
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", sessionId)
+      .select("share_token")
+      .single()
+
+    // Fire-and-forget notification emails
+    const notifyEmails: string[] = assessment.notify_emails ?? []
+    if (notifyEmails.length && completedSession?.share_token) {
+      const candidateName = (session.candidates as { name?: string; email?: string })?.name
+        ?? (session.candidates as { name?: string; email?: string })?.email
+        ?? "A candidate"
+      sendResultsNotification({
+        to: notifyEmails,
+        candidateName,
+        assessmentTitle: assessment.title,
+        score: scoreData.total_score,
+        shareToken: completedSession.share_token,
+      }).catch((err) => console.error("Notification email failed:", err))
+    }
 
     return NextResponse.json({ score })
   } catch (err) {

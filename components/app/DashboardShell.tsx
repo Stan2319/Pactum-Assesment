@@ -19,10 +19,11 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false
-    return localStorage.getItem("dashboard-dark-mode") === "true"
-  })
+  const [darkMode, setDarkMode] = useState<boolean>(false)
+
+  useEffect(() => {
+    setDarkMode(localStorage.getItem("dashboard-dark-mode") === "true")
+  }, [])
   const popoverRef = useRef<HTMLDivElement>(null)
 
   function toggleDarkMode() {

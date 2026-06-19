@@ -100,6 +100,7 @@ export interface Assessment {
   language?: "python" | "javascript"
   starter_files?: Record<string, string>
   is_active: boolean
+  notify_emails: string[]
   created_at: string
 }
 
@@ -124,6 +125,7 @@ export interface Session {
   status: "in_progress" | "completed" | "abandoned"
   document_state: DocumentState | null
   sandbox_id?: string | null
+  share_token: string
 }
 
 export interface Message {

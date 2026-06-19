@@ -28,6 +28,17 @@
   /* Shadows */
   --shadow-whisper: rgba(0,0,0,0.08) 0px 3px 6px, rgba(0,0,0,0.07) 0px 2px 4px;
   --shadow-elevated: rgba(0,0,0,0.1) 0px 10px 20px, rgba(0,0,0,0.05) 0px 3px 6px;
+
+  /* Semantic score colors */
+  --score-green-bg:     #d1fae5;
+  --score-green-border: #6ee7b7;
+  --score-green-text:   #065f46;
+  --score-amber-bg:     #fef3c7;
+  --score-amber-border: #fcd34d;
+  --score-amber-text:   #92400e;
+  --score-red-bg:       #fee2e2;
+  --score-red-border:   #fca5a5;
+  --score-red-text:     #991b1b;
 }
 
 /* ─── Tailwind v4 theme extension ───────────────────────────── */
@@ -57,6 +68,16 @@
   --color-silver:      #52525b;
   --color-border:      #27272a;
   --color-border-input:#3f3f46;
+
+  --score-green-bg:     rgba(5, 46, 22, 0.7);
+  --score-green-border: #166534;
+  --score-green-text:   #4ade80;
+  --score-amber-bg:     rgba(45, 26, 0, 0.7);
+  --score-amber-border: #92400e;
+  --score-amber-text:   #fbbf24;
+  --score-red-bg:       rgba(45, 10, 10, 0.7);
+  --score-red-border:   #7f1d1d;
+  --score-red-text:     #f87171;
 }
 
 /* ─── Base ───────────────────────────────────────────────────── */

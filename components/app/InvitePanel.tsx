@@ -21,8 +21,8 @@ interface InvitePanelProps {
 
 function candidateStatus(c: Candidate): { label: string; color: string } {
   const session = c.sessions?.[0]
-  if (session?.status === "completed") return { label: "Completed", color: "#065f46" }
-  if (session?.status === "in_progress" || c.name) return { label: c.name ? `In progress · ${c.name}` : "In progress", color: "#92400e" }
+  if (session?.status === "completed") return { label: "Completed", color: "#22c55e" }
+  if (session?.status === "in_progress" || c.name) return { label: c.name ? `In progress · ${c.name}` : "In progress", color: "#f59e0b" }
   return { label: "Not started", color: "var(--color-silver)" }
 }
 
@@ -198,14 +198,14 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
             type="submit"
             disabled={loading || !email.trim()}
             className="cursor-pointer shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: "var(--color-ink)", color: "#fff" }}
+            style={{ background: "var(--color-ink)", color: "var(--color-canvas)" }}
           >
             {loading ? "Generating…" : "Generate link"}
           </button>
         </form>
 
         {error && (
-          <p className="mt-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+          <p className="mt-2 text-sm rounded-lg px-3 py-2" style={{ color: "#ef4444", background: "color-mix(in srgb, #ef4444 10%, var(--color-canvas))" }}>{error}</p>
         )}
 
         {/* Divider */}
@@ -250,7 +250,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
               Emails are extracted automatically — any CSV format works
             </p>
             {csvError && (
-              <p className="mt-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{csvError}</p>
+              <p className="mt-2 text-sm rounded-lg px-3 py-2" style={{ color: "#ef4444", background: "color-mix(in srgb, #ef4444 10%, var(--color-canvas))" }}>{csvError}</p>
             )}
           </div>
         ) : (
@@ -311,7 +311,7 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
                 onClick={handleBulkGenerate}
                 disabled={csvLoading}
                 className="cursor-pointer flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: "var(--color-ink)", color: "#fff" }}
+                style={{ background: "var(--color-ink)", color: "var(--color-canvas)" }}
               >
                 {csvLoading
                   ? "Generating…"
@@ -383,8 +383,9 @@ export function InvitePanel({ assessmentTitle, assessmentId, siteUrl, initialCan
                     onClick={() => handleCopy(c.invite_token)}
                     className="cursor-pointer shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                     style={{
-                      background: isCopied ? "#d1fae5" : "var(--color-ink)",
-                      color: isCopied ? "#065f46" : "#fff",
+                      background: isCopied ? "color-mix(in srgb, #22c55e 15%, var(--color-canvas))" : "var(--color-ink)",
+                      color: isCopied ? "#22c55e" : "var(--color-canvas)",
+                      border: isCopied ? "1px solid #22c55e" : "none",
                     }}
                   >
                     {isCopied ? "Copied!" : "Copy link"}
