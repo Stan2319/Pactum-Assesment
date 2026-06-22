@@ -21,13 +21,15 @@ export default async function SharePage({ params }: Props) {
 
   if (!session || session.status !== "completed") notFound()
 
-  const assessment = session.assessments as Assessment
-  const candidate = session.candidates as { name: string | null; email: string | null }
-  const messages = (session.messages as Message[]).sort(
+  const assessment = session.assessments as Assessment | null
+  const candidate = session.candidates as { name: string | null; email: string | null } | null
+  const messages = ((session.messages as Message[] | null) ?? []).sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
-  const score = session.scores?.[0] as Score | undefined
-  const candidateLabel = candidate.name ?? candidate.email ?? "Candidate"
+  const score = (session.scores as Score[] | null)?.[0]
+  const candidateLabel = candidate?.name ?? candidate?.email ?? "Candidate"
+
+  if (!assessment || !candidate) notFound()
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-canvas)" }}>
@@ -90,8 +92,8 @@ export default async function SharePage({ params }: Props) {
             </div>
 
             <div className="px-6 pb-6 grid grid-cols-3 gap-4" style={{ borderTop: "1px solid var(--color-border)", paddingTop: 24 }}>
-              <FeedbackColumn title="Strengths" items={score.strengths} accentColor="#22c55e" />
-              <FeedbackColumn title="Areas to improve" items={score.improvements} accentColor="#f59e0b" />
+              <FeedbackColumn title="Strengths" items={score.strengths ?? []} accentColor="#22c55e" />
+              <FeedbackColumn title="Areas to improve" items={score.improvements ?? []} accentColor="#f59e0b" />
               <FeedbackColumn
                 title="Red flags"
                 items={score.red_flags?.length ? score.red_flags : ["None detected"]}
