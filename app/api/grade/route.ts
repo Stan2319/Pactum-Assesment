@@ -344,9 +344,23 @@ export async function POST(req: NextRequest) {
         to: notifyEmails,
         candidateName,
         assessmentTitle: assessment.title,
-        score: scoreData.total_score,
+        score: total_score,
         shareToken: completedSession.share_token,
-      }).catch((err) => console.error("Notification email failed:", err))
+      }).then(() => {
+        console.log(`Results email sent to ${notifyEmails.join(", ")} for session ${sessionId}`)
+      }).catch((err) => {
+        console.error("Notification email failed:", {
+          sessionId,
+          to: notifyEmails,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      })
+    } else {
+      console.log("No notification sent:", {
+        sessionId,
+        notifyEmails,
+        hasShareToken: !!completedSession?.share_token,
+      })
     }
 
     return NextResponse.json({ score })
