@@ -82,16 +82,17 @@ export async function POST(req: NextRequest) {
     const companyName = company?.name ?? "A company"
     const assessmentTitle = assessment.title
 
-    Promise.allSettled(
-      (candidates ?? []).map((c) =>
-        sendInviteEmail({
-          to: c.email,
-          companyName,
-          assessmentTitle,
-          inviteToken: c.invite_token,
-        })
-      )
-    ).catch((err) => console.error("Bulk invite email error:", err))
+    // Invite emails disabled — links are shared manually
+    // Promise.allSettled(
+    //   (candidates ?? []).map((c) =>
+    //     sendInviteEmail({
+    //       to: c.email,
+    //       companyName,
+    //       assessmentTitle,
+    //       inviteToken: c.invite_token,
+    //     })
+    //   )
+    // ).catch((err) => console.error("Bulk invite email error:", err))
 
     return NextResponse.json({ results: candidates ?? [] })
   } catch (err) {

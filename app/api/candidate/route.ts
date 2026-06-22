@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
       .single()
 
-    sendInviteEmail({
-      to: email.trim(),
-      companyName: company?.name ?? "A company",
-      assessmentTitle: assessment.title,
-      inviteToken: token,
-    }).catch((err) => console.error("Invite email error:", err))
+    // Invite email disabled — link is copied manually from the dashboard
+    // sendInviteEmail({
+    //   to: email.trim(),
+    //   companyName: company?.name ?? "A company",
+    //   assessmentTitle: assessment.title,
+    //   inviteToken: token,
+    // }).catch((err) => console.error("Invite email error:", err))
 
     return NextResponse.json({ token })
   } catch (err) {
