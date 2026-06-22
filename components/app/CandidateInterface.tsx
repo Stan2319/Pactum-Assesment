@@ -228,6 +228,7 @@ export function CandidateInterface({
       }
 
       setIsStreaming(false)
+      setSending(false)
 
       // Extract patch from sentinel if present
       const sentinelIdx = fullContent.indexOf(PATCH_SENTINEL)
