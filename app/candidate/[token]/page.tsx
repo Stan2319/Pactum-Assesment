@@ -1,8 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { CandidateInterface } from "@/components/app/CandidateInterface"
-import { signSessionId } from "@/lib/session-token"
 
 interface Props {
   params: Promise<{ token: string }>
@@ -10,9 +9,17 @@ interface Props {
 
 export default async function CandidatePage({ params }: Props) {
   const { token } = await params
+
+  // Cookie must be set by the auth route handler before the page renders.
+  // If absent, redirect there — it creates the session, sets the cookie,
+  // and redirects back here.
+  const cookieStore = await cookies()
+  if (!cookieStore.get("pactum_cand_session")) {
+    redirect(`/api/candidate/auth?token=${token}`)
+  }
+
   const supabase = createAdminClient()
 
-  // Look up candidate by invite token
   const { data: candidate } = await supabase
     .from("candidates")
     .select("*, assessments(*)")
@@ -21,45 +28,13 @@ export default async function CandidatePage({ params }: Props) {
 
   if (!candidate) notFound()
 
-  // Check if a session already exists for this candidate
-  const { data: existingSession } = await supabase
+  const { data: session } = await supabase
     .from("sessions")
     .select("*")
     .eq("candidate_id", candidate.id)
     .single()
 
-  let session = existingSession
-
-  // Create session if it doesn't exist
-  if (!session) {
-    const { data: newSession } = await supabase
-      .from("sessions")
-      .insert({
-        candidate_id: candidate.id,
-        assessment_id: candidate.assessment_id,
-        company_id: candidate.company_id,
-        current_round: 1,
-        status: "in_progress",
-      })
-      .select()
-      .single()
-
-    session = newSession
-  }
-
-  if (!session) notFound()
-
-  // Set an httpOnly cookie binding this browser to the session.
-  // API routes verify this cookie matches the sessionId in the request body,
-  // preventing unauthenticated callers from targeting arbitrary sessions.
-  const cookieStore = await cookies()
-  cookieStore.set("pactum_cand_session", signSessionId(session.id), {
-    httpOnly: true,
-    sameSite: "strict",
-    path: "/",
-    maxAge: 60 * 60 * 24, // 24 hours
-    secure: process.env.NODE_ENV === "production",
-  })
+  if (!session) redirect(`/api/candidate/auth?token=${token}`)
 
   // Block re-entry once completed
   if (session.status === "completed") {
@@ -102,7 +77,6 @@ export default async function CandidatePage({ params }: Props) {
     )
   }
 
-  // Fetch existing messages
   const { data: messages } = await supabase
     .from("messages")
     .select("*")
