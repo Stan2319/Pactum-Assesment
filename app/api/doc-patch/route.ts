@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { verifySessionCookie } from "@/lib/session-token"
 import type { WorkspaceType, DocumentState } from "@/lib/types"
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -62,10 +63,19 @@ Do not include any explanation, markdown fences, or text outside the JSON object
 
 export async function POST(req: NextRequest) {
   try {
+    const cookieSession = req.cookies.get("pactum_cand_session")?.value
     const { sessionId, messageContent, workspaceType, currentDocumentState } = await req.json()
 
     if (!sessionId || !messageContent || !workspaceType) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (typeof messageContent === "string" && messageContent.length > 32_000) {
+      return NextResponse.json({ error: "Message too large" }, { status: 400 })
     }
 
     const supabase = createAdminClient()

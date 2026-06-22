@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-    if (!rateLimit(`invite:${ip}`, 30, 10 * 60 * 1000)) {
+    if (!await rateLimit(`invite:${ip}`, 30, 10 * 60 * 1000)) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
 

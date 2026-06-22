@@ -233,6 +233,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid messages" }, { status: 400 })
   }
 
+  // Cap conversation size to prevent token abuse
+  if (messages.length > 200) {
+    return NextResponse.json({ error: "Conversation too long" }, { status: 400 })
+  }
+  const totalChars = messages.reduce((sum: number, m: { content: string }) => sum + (m.content?.length ?? 0), 0)
+  if (totalChars > 500_000) {
+    return NextResponse.json({ error: "Conversation too large" }, { status: 400 })
+  }
+
   const supabase = createAdminClient()
 
   const { data: session } = await supabase

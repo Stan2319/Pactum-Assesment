@@ -10,6 +10,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
+    if (JSON.stringify(documentState).length > 2_000_000) {
+      return NextResponse.json({ error: "Document state too large" }, { status: 400 })
+    }
+
     // Verify the caller owns this session via cookie
     const cookieSession = req.cookies.get("pactum_cand_session")?.value
     if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {

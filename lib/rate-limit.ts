@@ -1,44 +1,45 @@
+import { createAdminClient } from "@/lib/supabase/admin"
+
 /**
- * In-memory sliding-window rate limiter.
- * Works for single-process deployments (dev, single server).
- * For serverless/multi-instance production, replace with Upstash:
- *   https://github.com/upstash/ratelimit-js
+ * Supabase-backed rate limiter — works on Vercel serverless (no shared memory).
+ * Requires a `rate_limits` table in Supabase:
+ *
+ *   create table rate_limits (
+ *     key text primary key,
+ *     count integer not null default 1,
+ *     reset_at timestamptz not null
+ *   );
+ *
+ * Fails open (allows request) if the DB is unreachable.
  */
-
-interface Window {
-  count: number
-  resetAt: number
-}
-
-const store = new Map<string, Window>()
-
-// Clean up expired entries every 5 minutes to prevent memory leak
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
+export async function rateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+  try {
+    const supabase = createAdminClient()
     const now = Date.now()
-    for (const [key, win] of store) {
-      if (win.resetAt < now) store.delete(key)
+    const resetAt = new Date(now + windowMs).toISOString()
+
+    const { data: existing } = await supabase
+      .from("rate_limits")
+      .select("count, reset_at")
+      .eq("key", key)
+      .maybeSingle()
+
+    if (!existing || new Date(existing.reset_at).getTime() < now) {
+      await supabase
+        .from("rate_limits")
+        .upsert({ key, count: 1, reset_at: resetAt }, { onConflict: "key" })
+      return true
     }
-  }, 5 * 60 * 1000)
-}
 
-/**
- * Returns true if the request is allowed, false if rate limited.
- * @param key     Identifier (e.g. IP address or "ip:route")
- * @param limit   Max requests per window
- * @param windowMs  Window duration in milliseconds
- */
-export function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  const existing = store.get(key)
+    if (existing.count >= limit) return false
 
-  if (!existing || existing.resetAt < now) {
-    store.set(key, { count: 1, resetAt: now + windowMs })
+    await supabase
+      .from("rate_limits")
+      .update({ count: existing.count + 1 })
+      .eq("key", key)
+
+    return true
+  } catch {
     return true
   }
-
-  if (existing.count >= limit) return false
-
-  existing.count++
-  return true
 }
