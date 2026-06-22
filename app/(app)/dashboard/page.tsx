@@ -13,6 +13,7 @@ const WORKSPACE_LABELS: Record<string, string> = {
   email: "Email",
   spreadsheet: "Sheet",
   deck: "Deck",
+  code: "Code",
 }
 
 export default async function DashboardPage() {
@@ -96,7 +97,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
             label="Assessments"
             value={assessments?.length ?? 0}
@@ -117,9 +118,9 @@ export default async function DashboardPage() {
         </div>
 
         {/* Two-column: assessments left, candidates right */}
-        <div className="grid grid-cols-5 gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 items-start">
           {/* Assessments — narrower left column */}
-          <section className="col-span-2">
+          <section className="col-span-1 lg:col-span-2">
             <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: "var(--color-silver)" }}>
               Assessments
             </h2>
@@ -153,7 +154,7 @@ export default async function DashboardPage() {
           </section>
 
           {/* Recent candidates — wider right column */}
-          <section className="col-span-3">
+          <section className="col-span-1 lg:col-span-3">
             <RecentCandidates sessions={recentSessions as any ?? []} assessments={assessments ?? []} />
           </section>
         </div>

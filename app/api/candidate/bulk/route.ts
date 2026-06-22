@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { randomUUID } from "crypto"
 import { rateLimit } from "@/lib/rate-limit"
+import { sendInviteEmail } from "@/lib/email"
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     const { data: assessment } = await supabase
       .from("assessments")
-      .select("id, company_id, is_active")
+      .select("id, title, company_id, is_active")
       .eq("id", assessmentId)
       .eq("company_id", user.id)
       .eq("is_active", true)
@@ -71,6 +72,26 @@ export async function POST(req: NextRequest) {
       console.error("Bulk candidate insert error:", error)
       return NextResponse.json({ error: "Failed to create invites" }, { status: 500 })
     }
+
+    const { data: company } = await supabase
+      .from("companies")
+      .select("name")
+      .eq("id", user.id)
+      .single()
+
+    const companyName = company?.name ?? "A company"
+    const assessmentTitle = assessment.title
+
+    Promise.allSettled(
+      (candidates ?? []).map((c) =>
+        sendInviteEmail({
+          to: c.email,
+          companyName,
+          assessmentTitle,
+          inviteToken: c.invite_token,
+        })
+      )
+    ).catch((err) => console.error("Bulk invite email error:", err))
 
     return NextResponse.json({ results: candidates ?? [] })
   } catch (err) {

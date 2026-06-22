@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { PactumMark } from "@/components/PactumLogo"
 
 export default function Footer() {
   const year = new Date().getFullYear()
@@ -24,16 +25,7 @@ export default function Footer() {
           gap: 16,
         }}
       >
-        <span
-          style={{
-            fontWeight: 800,
-            fontSize: "1rem",
-            color: "rgba(255,255,255,0.9)",
-            letterSpacing: "-0.04em",
-          }}
-        >
-          Pactum
-        </span>
+        <PactumMark height={22} variant="light" />
 
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           {[

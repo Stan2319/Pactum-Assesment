@@ -102,7 +102,7 @@ export function Hero() {
         {/* CTA */}
         <motion.div variants={fadeInUp} style={{ marginBottom: 40 }}>
           <motion.a
-            href="#final-cta"
+            href="/signup"
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -119,7 +119,7 @@ export function Hero() {
               cursor: "pointer",
             }}
           >
-            Join the waitlist
+            Get started free
           </motion.a>
         </motion.div>
 

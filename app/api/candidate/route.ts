@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { randomUUID } from "crypto"
 import { rateLimit } from "@/lib/rate-limit"
+import { sendInviteEmail } from "@/lib/email"
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     // Ownership check: assessment must belong to the calling user's company
     const { data: assessment } = await supabase
       .from("assessments")
-      .select("id, company_id, is_active")
+      .select("id, title, company_id, is_active")
       .eq("id", assessmentId)
       .eq("company_id", user.id)
       .eq("is_active", true)
@@ -57,6 +58,19 @@ export async function POST(req: NextRequest) {
       console.error("Candidate insert error:", error)
       return NextResponse.json({ error: "Failed to create candidate" }, { status: 500 })
     }
+
+    const { data: company } = await supabase
+      .from("companies")
+      .select("name")
+      .eq("id", user.id)
+      .single()
+
+    sendInviteEmail({
+      to: email.trim(),
+      companyName: company?.name ?? "A company",
+      assessmentTitle: assessment.title,
+      inviteToken: token,
+    }).catch((err) => console.error("Invite email error:", err))
 
     return NextResponse.json({ token })
   } catch (err) {

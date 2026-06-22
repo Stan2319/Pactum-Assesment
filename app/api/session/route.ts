@@ -48,22 +48,35 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH: update session round or status
+// PATCH: update session round, status, or candidate name
 export async function PATCH(req: NextRequest) {
   try {
-    const { sessionId, current_round, status } = await req.json()
+    const { sessionId, current_round, status, candidate_name } = await req.json()
 
     if (!sessionId) {
       return NextResponse.json({ error: "Missing sessionId" }, { status: 400 })
     }
 
-    // Verify the caller owns this session via cookie
     const cookieSession = getCandidateSession(req)
     if (!cookieSession || !verifySessionCookie(cookieSession, sessionId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const supabase = createAdminClient()
+
+    if (candidate_name !== undefined) {
+      const { data: sessionRow } = await supabase
+        .from("sessions")
+        .select("candidate_id")
+        .eq("id", sessionId)
+        .single()
+      if (sessionRow?.candidate_id) {
+        await supabase
+          .from("candidates")
+          .update({ name: typeof candidate_name === "string" ? candidate_name.trim() || null : null })
+          .eq("id", sessionRow.candidate_id)
+      }
+    }
 
     const updates: Record<string, unknown> = {}
     if (current_round !== undefined) {
@@ -79,14 +92,16 @@ export async function PATCH(req: NextRequest) {
       updates.status = status
     }
 
-    const { error } = await supabase
-      .from("sessions")
-      .update(updates)
-      .eq("id", sessionId)
+    if (Object.keys(updates).length > 0) {
+      const { error } = await supabase
+        .from("sessions")
+        .update(updates)
+        .eq("id", sessionId)
 
-    if (error) {
-      console.error("Session update error:", error)
-      return NextResponse.json({ error: "Failed to update session" }, { status: 500 })
+      if (error) {
+        console.error("Session update error:", error)
+        return NextResponse.json({ error: "Failed to update session" }, { status: 500 })
+      }
     }
 
     return NextResponse.json({ ok: true })

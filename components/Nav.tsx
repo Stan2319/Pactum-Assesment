@@ -3,6 +3,7 @@
 import { motion, useScroll } from "framer-motion"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { PactumMark } from "@/components/PactumLogo"
 
 export default function Nav() {
   const { scrollY } = useScroll()
@@ -43,14 +44,7 @@ export default function Nav() {
         justifyContent: "space-between",
       }}>
         <Link href="/" style={{ textDecoration: "none" }}>
-          <span style={{
-            fontWeight: 800,
-            fontSize: "1.1rem",
-            color: "var(--color-ink)",
-            letterSpacing: "-0.04em",
-          }}>
-            Pactum
-          </span>
+          <PactumMark height={28} variant="dark" />
         </Link>
 
         <div className="hidden md:flex" style={{ gap: 32, alignItems: "center" }}>

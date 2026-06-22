@@ -165,7 +165,7 @@ function serializeDocState(docState: unknown, workspaceType: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, regrade } = await req.json()
+    const { sessionId, regrade, elapsedSeconds } = await req.json()
 
     if (!sessionId) {
       return NextResponse.json({ error: "Missing sessionId" }, { status: 400 })
@@ -247,6 +247,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Append elapsed time for efficiency scoring
+    if (typeof elapsedSeconds === "number" && elapsedSeconds > 0) {
+      const mins = Math.floor(elapsedSeconds / 60)
+      const secs = elapsedSeconds % 60
+      transcript += `\n--- SESSION TIMING ---\nTotal time: ${mins}m ${secs}s\n`
+    }
+
     // Append final document
     const docState = session.document_state
     if (docState) {
@@ -284,6 +291,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to parse grader response" }, { status: 500 })
     }
 
+    // Clamp each component to its max, derive total from components (never trust AI's total)
+    const clamp = (v: unknown, max: number) => Math.min(max, Math.max(0, Math.round(Number(v) || 0)))
+    const prompt_quality    = clamp(scoreData.prompt_quality, 30)
+    const iteration_score   = clamp(scoreData.iteration_score, 25)
+    const output_quality    = clamp(scoreData.output_quality, 20)
+    const critical_thinking = clamp(scoreData.critical_thinking, 15)
+    const efficiency        = clamp(scoreData.efficiency, 10)
+    const total_score       = prompt_quality + iteration_score + output_quality + critical_thinking + efficiency
+
     const { data: score, error } = await supabase
       .from("scores")
       .insert({
@@ -291,12 +307,12 @@ export async function POST(req: NextRequest) {
         candidate_id: session.candidate_id,
         assessment_id: session.assessment_id,
         company_id: session.company_id,
-        total_score: scoreData.total_score,
-        prompt_quality: scoreData.prompt_quality,
-        iteration_score: scoreData.iteration_score,
-        output_quality: scoreData.output_quality,
-        critical_thinking: scoreData.critical_thinking,
-        efficiency: scoreData.efficiency,
+        total_score,
+        prompt_quality,
+        iteration_score,
+        output_quality,
+        critical_thinking,
+        efficiency,
         summary: scoreData.summary,
         strengths: scoreData.strengths,
         improvements: scoreData.improvements,

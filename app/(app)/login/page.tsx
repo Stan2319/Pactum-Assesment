@@ -3,6 +3,8 @@
 import { useState, Suspense } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { PactumMark } from "@/components/PactumLogo"
 
 type View = "signin" | "forgot" | "forgot-sent"
 
@@ -91,7 +93,7 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--color-canvas)" }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <span className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-ink)" }}>Pactum</span>
+          <div className="flex justify-center mb-3"><PactumMark height={48} variant="dark" /></div>
           <p className="mt-1 text-sm" style={{ color: "var(--color-slate)" }}>
             {view === "forgot" ? "Reset your password" : "Sign in to your dashboard"}
           </p>
@@ -147,6 +149,13 @@ function LoginForm() {
             </form>
           )}
         </div>
+
+        <p className="mt-4 text-center text-sm" style={{ color: "var(--color-slate)" }}>
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="font-medium underline" style={{ color: "var(--color-cobalt)" }}>
+            Sign up free
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -302,17 +302,20 @@ function handleAcceptPatch() {
     setSending(true)
     setGradeError("")
     try {
-      const res = await fetch("/api/grade", {
+      await fetch("/api/session", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id, status: "completed" }),
+      })
+      setSessionStatus("completed")
+      // Grade in background — candidate doesn't wait, hiring manager sees result async
+      fetch("/api/grade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: session.id }),
-      })
-      if (!res.ok) throw new Error("Submission failed")
-      setSessionStatus("completed")
-    } catch (err) {
-      console.error("Grade error:", err)
-      setGradeError("Something went wrong submitting. Please try again.")
-    } finally {
+        body: JSON.stringify({ sessionId: session.id, elapsedSeconds }),
+      }).catch(console.error)
+    } catch {
+      setGradeError("Something went wrong. Please try again.")
       setSending(false)
     }
   }
@@ -342,7 +345,7 @@ function handleAcceptPatch() {
           await fetch("/api/session", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId: session.id }),
+            body: JSON.stringify({ sessionId: session.id, candidate_name: name }),
           })
           setCandidateName(name)
           setNameSubmitted(true)
@@ -353,19 +356,25 @@ function handleAcceptPatch() {
 
   // Completed state
   if (sessionStatus === "completed") {
+    const firstName = candidateName?.split(" ")[0]
     return (
       <div data-dark={darkMode} className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--color-canvas)" }}>
-        <div className="text-center max-w-md">
-          <div className="text-5xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--color-ink)" }}>
-            Assessment complete
+        <div className="w-full max-w-sm text-center">
+          <div
+            className="inline-flex items-center justify-center rounded-full mb-6"
+            style={{ width: 56, height: 56, background: "color-mix(in srgb, #22c55e 12%, var(--color-canvas))", border: "1.5px solid #22c55e" }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black mb-2" style={{ color: "var(--color-ink)", letterSpacing: "-0.04em" }}>
+            {firstName ? `Nice work, ${firstName}.` : "Nice work."}
           </h1>
-          <p className="text-sm" style={{ color: "var(--color-slate)" }}>
-            Your responses have been submitted and scored. The hiring team will be in touch.
+          <p className="text-sm" style={{ color: "var(--color-slate)", lineHeight: 1.6 }}>
+            Your submission has been received. The hiring team will be in touch soon.
           </p>
-          <p className="text-xs mt-4" style={{ color: "var(--color-silver)" }}>
-            Time: {formatTime(elapsedSeconds)}
-          </p>
+          <p className="mt-8 text-xs" style={{ color: "var(--color-silver)" }}>Assessed by Pactum</p>
         </div>
       </div>
     )

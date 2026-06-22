@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useState, useRef, useEffect } from "react"
 import { LayoutDashboard, Plus, CreditCard, Trash2, LogOut, ChevronUp, Moon, Sun } from "lucide-react"
+import { PactumMark } from "@/components/PactumLogo"
 
 interface DashboardShellProps {
   companyName: string
@@ -16,22 +17,26 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
   const pathname = usePathname()
   const router = useRouter()
   const [accountOpen, setAccountOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
-  const [darkMode, setDarkMode] = useState<boolean>(false)
-
-  useEffect(() => {
-    setDarkMode(localStorage.getItem("dashboard-dark-mode") === "true")
-  }, [])
   const popoverRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    setDarkMode(document.documentElement.getAttribute("data-dark") === "true")
+  }, [])
+
   function toggleDarkMode() {
-    setDarkMode((v) => {
-      const next = !v
-      localStorage.setItem("dashboard-dark-mode", String(next))
-      return next
-    })
+    const next = !darkMode
+    setDarkMode(next)
+    if (next) {
+      document.documentElement.setAttribute("data-dark", "true")
+      localStorage.setItem("pactum-dark", "true")
+    } else {
+      document.documentElement.removeAttribute("data-dark")
+      localStorage.setItem("pactum-dark", "false")
+    }
   }
 
   async function handleSignOut() {
@@ -69,7 +74,7 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
   const initial = userEmail.charAt(0).toUpperCase()
 
   return (
-    <div data-dark={darkMode} suppressHydrationWarning className="min-h-screen" style={{ background: "var(--color-canvas)" }}>
+    <div className="min-h-screen" style={{ background: "var(--color-canvas)" }}>
       {/* Sidebar */}
       <div
         className="fixed inset-y-0 left-0 w-56 flex flex-col"
@@ -81,8 +86,8 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
         {/* Logo */}
         <div className="px-5 pt-6 pb-5 border-b" style={{ borderColor: "var(--color-border)" }}>
           <div className="flex items-center gap-2 mb-0.5">
-            <Link href="/dashboard" className="text-base font-black tracking-tight" style={{ color: "var(--color-ink)", letterSpacing: "-0.04em" }}>
-              Pactum
+            <Link href="/dashboard">
+              <PactumMark height={26} variant={darkMode ? "light" : "dark"} />
             </Link>
             <span
               className="text-xs px-1.5 py-0.5 rounded-full font-semibold"
@@ -151,44 +156,11 @@ export function DashboardShell({ companyName, userEmail, children }: DashboardSh
 
               <div className="my-1 border-t" style={{ borderColor: "var(--color-border)" }} />
 
-              {/* Dark mode toggle */}
-              <div
-                className="flex items-center justify-between px-3 py-2"
-                style={{ cursor: "default" }}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span style={{ color: "var(--color-slate)" }}>
-                    {darkMode ? <Moon size={13} /> : <Sun size={13} />}
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--color-slate)" }}>Dark mode</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={toggleDarkMode}
-                  role="switch"
-                  aria-checked={darkMode}
-                  className="relative shrink-0 rounded-full transition-colors duration-200"
-                  style={{
-                    width: 36,
-                    height: 20,
-                    background: darkMode ? "var(--color-cobalt)" : "var(--color-border-input)",
-                    cursor: "pointer",
-                    border: "none",
-                    padding: 0,
-                  }}
-                >
-                  <span
-                    className="absolute top-0.5 rounded-full bg-white transition-transform duration-200"
-                    style={{
-                      width: 16,
-                      height: 16,
-                      left: 2,
-                      transform: darkMode ? "translateX(16px)" : "translateX(0px)",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                    }}
-                  />
-                </button>
-              </div>
+              <MenuAction
+                icon={darkMode ? <Sun size={13} /> : <Moon size={13} />}
+                label={darkMode ? "Light mode" : "Dark mode"}
+                onClick={toggleDarkMode}
+              />
 
               <div className="my-1 border-t" style={{ borderColor: "var(--color-border)" }} />
 

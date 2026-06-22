@@ -17,6 +17,75 @@ function safeSubject(s: string) {
   return s.replace(/[\r\n]/g, " ")
 }
 
+export async function sendInviteEmail({
+  to,
+  companyName,
+  assessmentTitle,
+  inviteToken,
+}: {
+  to: string
+  companyName: string
+  assessmentTitle: string
+  inviteToken: string
+}) {
+  if (!process.env.RESEND_API_KEY) return
+
+  const inviteUrl = `${SITE_URL}/candidate/${inviteToken}`
+  const safeCompany = esc(companyName)
+  const safeTitle = esc(assessmentTitle)
+
+  await resend.emails.send({
+    from: FROM,
+    to: [to],
+    subject: safeSubject(`${companyName} has sent you a skills assessment`),
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0f0f3;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+        <tr><td style="padding-bottom:28px;">
+          <span style="font-size:18px;font-weight:900;letter-spacing:-0.04em;color:#000;">Pactum</span>
+        </td></tr>
+
+        <tr><td style="background:#fff;border-radius:16px;border:1px solid #e0e1e6;overflow:hidden;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:28px 28px 24px;">
+                <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#1c2024;letter-spacing:-0.01em;">
+                  You&apos;ve been invited to complete a skills assessment
+                </p>
+                <p style="margin:0 0 20px;font-size:13px;color:#60646c;line-height:1.6;">
+                  <strong>${safeCompany}</strong> has asked you to complete <strong>&ldquo;${safeTitle}&rdquo;</strong>.
+                  You&apos;ll be given a realistic work task and can use AI tools to complete it &mdash;
+                  the goal is to see how you work, not test your memory.
+                </p>
+                <a href="${inviteUrl}" style="display:inline-block;background:#000;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:12px 24px;border-radius:9999px;">
+                  Start assessment &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding-top:20px;">
+          <p style="margin:0;font-size:11px;color:#b0b4ba;">
+            This link is unique to you &mdash; please don&apos;t share it.
+            Powered by Pactum.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  })
+}
+
 export async function sendResultsNotification({
   to,
   candidateName,
