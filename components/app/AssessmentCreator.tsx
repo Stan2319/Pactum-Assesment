@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import {
   ChevronLeft, ChevronRight, ChevronDown, Search, Code2, FileText,
-  LayoutTemplate, PenLine, Check,
+  LayoutTemplate, PenLine, Check, Mail, Presentation, Table2,
 } from "lucide-react"
 import type { Assessment, AssessmentRound, WorkspaceType } from "@/lib/types"
 
@@ -2902,14 +2902,35 @@ process.exit(failed > 0 ? 1 : 0)
 
 // ── Wizard ─────────────────────────────────────────────────────────
 
-type WizardStep = "start" | "type" | "search-coding" | "search-other"
+type WizardStep =
+  | "start"
+  | "type"
+  | "search-coding"
+  | "search-doc"
+  | "search-email"
+  | "search-deck"
+  | "search-excel"
 
 const STEP_INDEX: Record<WizardStep, number> = {
   start: 0,
   type: 1,
   "search-coding": 2,
-  "search-other": 2,
+  "search-doc": 2,
+  "search-email": 2,
+  "search-deck": 2,
+  "search-excel": 2,
 }
+
+// Each search step maps to one workspace kind it filters templates by.
+const SEARCH_WORKSPACE: Partial<Record<WizardStep, WorkspaceType>> = {
+  "search-coding": "code",
+  "search-doc": "report",
+  "search-email": "email",
+  "search-deck": "deck",
+  "search-excel": "spreadsheet",
+}
+
+const SEARCH_STEPS = Object.keys(SEARCH_WORKSPACE) as WizardStep[]
 
 const slideVariants = {
   enter: (d: number) => ({ x: d * 24, opacity: 0 }),
@@ -3025,10 +3046,8 @@ export function AssessmentCreator({ companyId, initialData, assessmentId }: Asse
   }
 
   const filteredTemplates = useMemo(() => {
-    const pool =
-      wizardStep === "search-coding"
-        ? TEMPLATES.filter(t => t.workspace === "code")
-        : TEMPLATES.filter(t => t.workspace !== "code")
+    const ws = SEARCH_WORKSPACE[wizardStep]
+    const pool = ws ? TEMPLATES.filter(t => t.workspace === ws) : []
     const q = searchQuery.toLowerCase().trim()
     if (!q) return pool
     return pool.filter(
@@ -3179,16 +3198,34 @@ export function AssessmentCreator({ companyId, initialData, assessmentId }: Asse
                   />
                   <WizardCard
                     icon={<FileText size={18} />}
-                    title="Everything else"
-                    description="Document, email, spreadsheet, or deck, business and comms skills."
-                    onClick={() => goTo("search-other")}
+                    title="Doc"
+                    description="Briefs, memos, and reports, written communication skills."
+                    onClick={() => goTo("search-doc")}
+                  />
+                  <WizardCard
+                    icon={<Mail size={18} />}
+                    title="Email"
+                    description="Drafting and replying, customer and stakeholder comms."
+                    onClick={() => goTo("search-email")}
+                  />
+                  <WizardCard
+                    icon={<Presentation size={18} />}
+                    title="Pitch deck"
+                    description="Slide-based storytelling, pitches and exec presentations."
+                    onClick={() => goTo("search-deck")}
+                  />
+                  <WizardCard
+                    icon={<Table2 size={18} />}
+                    title="Excel"
+                    description="Spreadsheets and formulas, data and finance tasks."
+                    onClick={() => goTo("search-excel")}
                   />
                 </div>
               </motion.div>
             )}
 
             {/* Step 3: search */}
-            {(wizardStep === "search-coding" || wizardStep === "search-other") && (
+            {SEARCH_STEPS.includes(wizardStep) && (
               <motion.div
                 key={wizardStep}
                 custom={wizardDir}
